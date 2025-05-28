@@ -1,0 +1,43 @@
+{
+  "name": "intellecta",
+  "productName": "intellecta",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "keywords": [],
+  "author": "chris",
+  "license": "MIT",
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.0.15",
+    "dompurify": "^3.2.6",
+    "electron-squirrel-startup": "^1.0.1",
+    "jsdom": "^26.1.0",
+    "katex": "^0.16.22",
+    "mammoth": "^1.9.0",
+    "marked": "^15.0.12",
+    "sanitize-html": "^2.17.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.7.0",
+    "@electron-forge/maker-deb": "^7.7.0",
+    "@electron-forge/maker-rpm": "^7.7.0",
+    "@electron-forge/maker-squirrel": "^7.7.0",
+    "@electron-forge/maker-zip": "^7.7.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.7.0",
+    "@electron-forge/plugin-fuses": "^7.7.0",
+    "@electron/fuses": "^1.8.0",
+    "autoprefixer": "^10.4.21",
+    "electron": "34.2.0",
+    "postcss": "^8.5.3",
+    "postcss-loader": "^8.1.1",
+    "tailwindcss": "^4.0.15"
+  }
+}

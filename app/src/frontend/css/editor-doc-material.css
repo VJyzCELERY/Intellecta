@@ -1,0 +1,532 @@
+/*main content*/
+.main-content {
+  position: relative;
+  display: flex;
+  gap: 0.625rem;
+  margin-left: 12.5rem;
+  flex: 1;
+  order: 1;
+  padding: 30px;
+  background-color: var(--cream);
+  height: calc(100vh);
+  z-index: 0;
+}
+
+/* editor section  */
+.notes-container {
+  position: relative;
+  flex: 1;
+  min-width: 50%;
+  background: var(--fullwhite);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notes-overlay{
+  top:0;
+  bottom:0;
+  left:0;
+  right:0;
+  height:100%;
+  width:100%;
+  position:absolute;
+  background: gray;
+  opacity: 0.1;
+  z-index: 50;
+}
+.notes-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.content-area {
+  height: calc(100vh - 2.5);
+  overflow-y: auto;
+}
+
+#content-editor {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  white-space: normal;
+  max-width: 100%;
+  width: 100%;
+  min-height: 100px;
+  /* Minimum height when empty */
+  height: auto;
+  border: 0.1rem ridge rgba(43, 50, 128, 0.256);
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 24px;
+  font-size: 16px;
+  line-height: 1.6;
+  font-family: Arial, sans-serif;
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow-y: hidden;
+  /* Remove scrollbar from editor itself */
+  resize: vertical;
+  /* Allow vertical resizing */
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+  background-color: var(--fullwhite);
+}
+
+#content-editor:empty:before {
+  content: "Type your text here...";
+  color: #999;
+  pointer-events: none;
+
+}
+
+#content-editor:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.editor-placeholder {
+  position: absolute;
+  color: #999;
+  pointer-events: none;
+  padding: 24px;
+  font-size: 16px;
+}
+
+/*format toolbar*/
+.format-toolbar {
+  max-width: calc(100%);
+  position: sticky;
+  bottom: 0;
+  background: var(--lightblue);
+  padding: 0.625rem;
+  border-top: 1px solid var(--black);
+  display: flex;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 0;
+  flex-wrap: wrap;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.left-controls {
+  display: flex;
+  gap: 0.625rem;
+}
+
+.format-button {
+  padding: 0.25rem;
+  border: 1px solid var(--white3);
+  background: var(--fullwhite);
+  border-radius: 4px;
+  cursor: pointer;
+  align-items: center;
+  min-width: 1.25rem;
+  justify-content: center;
+}
+
+.format-button:hover {
+  background-color: var(--white3);
+  border-bottom: 1px solid var(--blue);
+  transition: 0.1s ease-in-out;
+}
+
+.format-button.active {
+  background: var(--white3);
+  border-color: var(--light-black);
+}
+
+#content-editor a {
+  color: var(--blue4);
+  text-decoration: underline;
+}
+
+/* link formating  */
+.document-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--cream);
+  border-radius: 4px;
+  margin: 4px;
+}
+
+/* save button  */
+.save-btn {
+  background-color: var(--blue3);
+  font-size: 1rem;
+  padding: 0.23rem 1.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  color: var(--white);
+  font-weight: 900;
+  align-items: center;
+  transition: background 0.2s;
+  margin-left: auto;
+}
+
+.save-btn:hover {
+  background-color: var(--blue);
+  /* border-bottom: 1px solid var(--white2); */
+  color: var(--white);
+  transition: 0.15s ease-in-out;
+}
+
+/*Document Container */
+.documents-container {
+  order: 2;
+  flex: 1;
+  min-width: 25rem;
+  background: var(--fullwhite);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 15px;
+}
+
+/* Document item styling */
+.document-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem;
+  margin: 0.5rem 0;
+  background: var(--cream);
+  border: 1px solid var(--white3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-btn {
+  transition: all 0.2s ease;
+  color: var(--red2);
+  cursor: pointer;
+  padding: 2px 5px;
+  display: none;
+}
+
+.document-item:hover {
+
+  background: var(--white2);
+}
+
+.document-item:hover .delete-btn {
+  display: block;
+}
+
+/* Link form styles */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  margin-bottom: 0.1rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--white3);
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--blue3);
+  color: var(--white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: 0.1s ease-in-out;
+}
+
+.btn-primary:hover {
+  color: var(--blue);
+  background-color: var(--cream);
+  border-bottom: 1px solid var(--blue4);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+  background-color: var(--white2);
+  color: var(--light-black);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: 0.1s ease-in-out;
+}
+
+.btn-secondary:hover {
+  background-color: var(--white);
+  color: var(--light-black);
+}
+
+/* Upload dropzone styles */
+.drop-zone {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  margin: 15px 0;
+  transition: border-color 0.3s;
+}
+
+.drop-zone.dragover {
+  border-color: #1976d2;
+  background: #f8f9fa;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Creation Modal */
+.creation-modal {
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.creation-option {
+  padding: 15px;
+  border: 2px dashed var(--blue4);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.creation-option:hover {
+  background: var(--lightblue);
+}
+
+/* Naming Note Modal*/
+.note-title input {
+    padding: 0.6rem 9rem 0.6rem 0.2rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    align-items: start;
+}
+
+.note-title input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(45, 51, 107, 0.2);
+}
+
+.modal-header h4 {
+  color: var(--blue);
+  font-weight: 800;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.info-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  gap: 15px;
+}
+
+.info-text p{
+  margin-bottom: 0.3rem;
+  font-size: 1.5rem;
+  color: var(--light-black);
+}
+
+.info-text button {
+  font-weight: 600;
+  font-size: 1.25rem;
+  border-radius: 20rem;
+}
+
+/* Modal overlay styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease-out;
+  z-index: 50;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: var(--fullwhite);
+  padding: 25px;
+  border-radius: 10px;
+  width: 400px;
+  transform: translateY(-50px);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(-50px);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.modal-close {
+  cursor: pointer;
+  font-size: 1.5em;
+  color: #666;
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Main Content Adjustments */
+  .main-content {
+    margin-left: 0;
+    /* margin-left: 5rem; */
+    padding: 20px;
+    gap: 0.8rem;
+  }
+
+  /* Notes Container */
+  .notes-container {
+    flex: 2;
+    min-width: 60%;
+  }
+
+  /* Documents Container */
+  .documents-container {
+    flex: 1;
+    min-width: 35%;
+    padding: 15px;
+  }
+
+  /* Editor Adjustments */
+  #content-editor {
+    padding: 20px;
+    font-size: 15px;
+  }
+
+  /* Format Toolbar */
+  .format-toolbar {
+    padding: 0.5rem;
+    gap: 6px;
+  }
+
+  /* Document Items */
+  .document-item {
+    display: flex;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .delete-btn {
+    display: block;
+  }
+
+  /* Modal Adjustments */
+  .modal-content {
+    width: 70%;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    flex-direction: column;
+    padding: 15px;
+    height: auto;
+  }
+
+  .notes-container,
+  .documents-container {
+    min-width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .format-toolbar {
+    gap: 5px;
+    padding: 0.5rem;
+  }
+
+  .document-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #pdf-viewer {
+    display: none;
+    width: 100%;
+    height: 90vh; /* Changed from 100% to viewport height */
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: white;
+  }
+
+  /* Add this to ensure proper spacing when PDF is active */
+  #pdf-viewer.active {
+    display: block;
+    height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Modify the notes container */
+  .notes-container {
+    position: relative; /* Add this */
+    min-height: 90vh; /* Ensure container has minimum height */
+  }
+
+  /* Hide notes content when PDF is visible */
+  #pdf-viewer.active ~ .notes-scrollable {
+    display: none;
+  }
+}

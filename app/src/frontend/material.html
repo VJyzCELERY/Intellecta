@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intellecta</title>
+  <link rel="stylesheet" href="./aptos_font_family/stylesheet.css">
+  <link rel="stylesheet" href="./css/navbar-util.css" />
+  <link rel="stylesheet" href="./css/editor-doc-material.css" />
+  <link rel="stylesheet" href="./css/topic-nav.css" />
+  <link rel="stylesheet" href="./css/IntelAI.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- Sidebar header -->
+      <header class="sidebar-header">
+        <a href="home.html" class="header-logo">
+          <img src="./asset/logo.png" alt="Intellecta">
+        </a>
+        <button class="toggler sidebar-toggler">
+          
+        </button>
+        <button class="toggler menu-toggler">
+          <span class="material-symbols-rounded">menu</span>
+        </button>
+      </header>
+  
+      <nav class="sidebar-nav">
+        <!-- Primary top nav -->
+        <ul class="nav-list primary-nav">
+          <li class="nav-item">
+            <a href="home.html" class="nav-link">
+              <span class="nav-icon material-symbols-rounded">dashboard</span>
+              <span class="nav-label">Dashboard</span>
+            </a>
+            <span class="nav-tooltip">Dashboard</span>
+          </li>
+          <li class="nav-item">
+            <a href="schedule.html" class="nav-link">
+              <span class="nav-icon material-symbols-rounded">calendar_today</span>
+              <span class="nav-label">Schedule</span>
+            </a>
+            <span class="nav-tooltip">Schedule</span>
+          </li>
+          <li class="nav-item">
+            <a href="course.html" class="nav-link active">
+              <span class="material-symbols-outlined">menu_book</span>
+              <span class="nav-label">Course</span>
+            </a>
+            <span class="nav-tooltip">Course</span>
+          </li>
+        </ul>
+  
+        <!-- Secondary bottom nav -->
+        <ul class="nav-list secondary-nav">
+          <li class="nav-item">
+            <a href="setting.html" class="nav-link">
+              <span class="nav-icon material-symbols-rounded">settings</span>
+              <span class="nav-label">Settings</span>
+            </a>
+            <span class="nav-tooltip">Settings</span>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Modify the main content section -->
+    <main class="main-content" id="main-container">
+      <!-- Notes Container -->
+      <div class="notes-container">
+        <div class="notes-overlay" id="notes-block"></div>
+        <div class="notes-scrollable">
+          <div id="content-editor" contenteditable="true"></div>
+        </div>
+        <div class="format-toolbar">
+          <button class="format-button" onclick="toggleFormat('bold')" title="Bold">
+            <span class="material-symbols-outlined">format_bold</span>
+          </button>
+          <button class="format-button" onclick="toggleFormat('italic')" title="Italic">
+            <span class="material-symbols-outlined">format_italic</span>
+          </button>
+          <button class="format-button" onclick="toggleFormat('underline')" title="Underline">
+            <span class="material-symbols-outlined">format_underlined</span>
+          </button>
+          <button class="format-button" onclick="toggleList('unordered')" title="Bullet List">
+            <span class="material-symbols-outlined">list</span>
+          </button>
+          <button class="format-button" onclick="toggleList('ordered')" title="Numbered List">
+            <span class="material-symbols-outlined">format_list_numbered_rtl</span>
+          </button>
+          <button class="format-button" onclick="showLinkModal()" title="Insert Link">
+            <span class="material-symbols-outlined">link</span>
+          </button>
+          <button class="save-btn" onclick="saveNotes()">
+            <span class="material-symbols-outlined">file_save</span> 
+            SAVE
+          </button>
+        </div>
+        <div id="content-viewer" style="display: none; width: 100%; height: 100%;"></div>
+      </div>
+
+      <!-- Documents Container -->
+      <div class="documents-container">
+        <h3>Course Documents</h3>
+        <div class="document-list" id="documentList">
+            <!-- Example document item -->
+            <div class="document-item active">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="material-symbols-outlined">note</span>
+                    My Document.txt
+                    <span class="material-symbols-outlined" onclick="renameDocument()">edit</span>
+                </div>
+                <span class="delete-btn" onclick="deleteDocument('123')">×</span>
+            </div>
+          
+            <!-- Another example document item -->
+            <div class="document-item">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="material-symbols-outlined">picture_as_pdf</span>
+                    Report.pdf
+                    <span class="material-symbols-outlined" onclick="renameDocument()">edit</span>
+                </div>
+                <span class="delete-btn" onclick="deleteDocument('456')">×</span>
+            </div>
+        </div>
+        <div class="add-topic" style="text-align:center; line-height: 4rem; height: 4rem;"
+          onclick="showCreationModal()">
+          <span class="material-symbols-outlined">attach_file</span> Add New Document
+        </div>
+      </div>
+
+      <!-- Add AI toggle button -->
+      <div class="ai-toggle-btn" onclick="toggleAIChat()">
+        <span class="material-symbols-outlined">smart_toy</span>
+      </div>
+      <div class="ai-chatbot-container" id="aiChatPanel"></div>
+      
+
+    </main>
+
+    <!-- Link Modal -->
+    <div id="linkModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Insert Link</h3>
+          <span class="modal-close" onclick="closeModals()">×</span>
+        </div>
+        <form id="linkForm" onsubmit="insertLink(event)">
+          <div class="form-group">
+            <label>URL:</label>
+            <input type="url" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>Display Text:</label>
+            <input type="text" class="form-input" required>
+          </div>
+          <div class="form-buttons">
+            <button type="submit" class="btn btn-primary">Insert</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
+    <!-- Creation Modal -->
+    <div id="creationModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Create New</h3>
+          <span class="modal-close" onclick="closeModals()">×</span>
+        </div>
+        <div class="creation-modal">
+          <div class="creation-option" onclick="showNamingModal()">
+            <span class="material-symbols-outlined">note_add</span>
+            <p>New Notes</p>
+          </div>
+          <div class="creation-option" onclick="showUploadModal(true)">
+            <span class="material-symbols-outlined">upload</span>
+            <p>Upload Document</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Naming note Modal -->
+    <div id="noteNamingModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Notes Title</h3>
+          <span class="modal-close" onclick="closeModals()">×</span>
+        </div>
+        <div class="note-title">
+          <input type="text" id="noteTitle" placeholder="New Title..." onkeypress="if(event.key === 'Enter') createNewNote()">
+          <div class="form-buttons">
+            <button type="submit" class="btn btn-primary" onclick="createNewNote()">Enter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document Rename -->
+    <div id="documentNamingModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Document Title</h3>
+          <span class="modal-close" onclick="closeModals()">×</span>
+        </div>
+        <div class="note-title">
+          <input type="text" id="docTitle" placeholder="New Title..." onkeypress="if(event.key === 'Enter') createNewNote()">
+          <div class="form-buttons">
+            <button type="submit" class="btn btn-primary" onclick="renameDocument()">Enter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Naming topic Modal -->
+    <div id="topicNamingModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Topic Title</h3>
+          <span class="modal-close" onclick="closeModals()">×</span>
+        </div>
+        <div class="note-title">
+          <input type="text" id="topicTitle" placeholder="New Title..." onkeypress="if(event.key === 'Enter') renameTopic()">
+          <div class="form-buttons">
+            <button type="submit" class="btn btn-primary" onclick="renameTopic()">Enter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modify Upload Modal -->
+    <div id="uploadModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Upload Document</h3>
+          <span class="modal-close" onclick="closeModals()">×</span>
+        </div>
+        <div class="drop-zone" id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+          ondrop="handleDrop(event)">
+          📁 Drag and drop files here
+          <p>or</p>
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+            Browse Files
+          </button>
+          <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileSelect(event)">
+        </div>
+
+        <!-- Preview Section
+        <div class="preview-section" id="previewSection">
+          <h4>Selected Files</h4>
+          <div class="preview-list" id="previewList"></div>
+        </div>
+
+        <div class="form-buttons">
+          <button type="button" class="btn btn-primary" onclick="uploadFiles()">
+            Upload All
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="closeModals()">
+            Cancel
+          </button>
+        </div> -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toggle Button -->
+      <div class="nav-toggle" onclick="toggleTopicNav()">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </div>
+
+      <!-- Modal Overlay -->
+      <div id="navOverlay" class="modal-overlay" onclick="toggleTopicNav()"></div>
+
+      <!-- Topic Navigation -->
+      <div class="topic-nav right-side" id="topicNav">
+        <div class="nav-header">
+          <h3>Topics</h3>
+        </div>
+        <ul class="topic-list" id="topicList">
+          <!-- Topic list -->
+          <li class="topic-item active">
+            <span>Topic 1</span>
+            <span class="close-btn" onclick="deleteTopic(event, '${topic.id}')">&times;</span>
+          </li>
+        </ul>
+
+        <!-- controller  -->
+        <div class="controller">
+          <div class="add-topic" onclick="createNewTopic()">+ Add New Topic</div>
+        </div>
+      </div>
+
+  <div id="get-started" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4>Get Started</h4>
+        <span class="modal-close" onclick="closeModals()">×</span>
+      </div>
+      <div class="info-text">
+        <p>You don't have any topics yet!</p>
+        <button class="btn btn-primary" onclick="createNewTopic()">Create Topic</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/navbar.js"></script>
+  <script src="./js/ai-chat.js"></script>
+  <script src="./js/material-renderer.js"></script>
+  <script src="./js/material-load.js"></script>
+  <script src="./js/formatbar.js"></script>
+  <!-- <script src="material.js"></script> -->
+</body>
+
+</html>

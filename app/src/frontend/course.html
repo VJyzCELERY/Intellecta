@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intellecta</title>
+  <link rel="stylesheet" href="./aptos_font_family/stylesheet.css">
+  <link rel="stylesheet" href="./css/navbar-util.css"/>
+  <link rel="stylesheet" href="./css/course.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Rounded Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded&display=swap" rel="stylesheet" />
+
+  <!-- Outlined Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap" rel="stylesheet" />
+
+</head>
+<body>
+
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- Sidebar header -->
+      <header class="sidebar-header">
+        <a href="home.html" class="header-logo">
+          <img src="./asset/logo.png" alt="Intellecta">
+        </a>
+        <button class="toggler sidebar-toggler">
+          
+        </button>
+        <button class="toggler menu-toggler">
+          <span class="material-symbols-rounded">menu</span>
+        </button>
+      </header>
+  
+      <nav class="sidebar-nav">
+        <!-- Primary top nav -->
+        <ul class="nav-list primary-nav">
+          <li class="nav-item">
+            <a href="home.html" class="nav-link">
+              <span class="nav-icon material-symbols-rounded">dashboard</span>
+              <span class="nav-label">Dashboard</span>
+            </a>
+            <span class="nav-tooltip">Dashboard</span>
+          </li>
+          <li class="nav-item">
+            <a href="schedule.html" class="nav-link">
+              <span class="nav-icon material-symbols-rounded">calendar_today</span>
+              <span class="nav-label">Schedule</span>
+            </a>
+            <span class="nav-tooltip">Schedule</span>
+          </li>
+          <li class="nav-item">
+            <a href="course.html" class="nav-link active">
+              <span class="material-symbols-outlined">menu_book</span>
+              <span class="nav-label">Course</span>
+            </a>
+            <span class="nav-tooltip">Course</span>
+          </li>
+        </ul>
+  
+        <!-- Secondary bottom nav -->
+        <ul class="nav-list secondary-nav">
+          <li class="nav-item">
+            <a href="setting.html" class="nav-link">
+              <span class="nav-icon material-symbols-rounded">settings</span>
+              <span class="nav-label">Settings</span>
+            </a>
+            <span class="nav-tooltip">Settings</span>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      
+      <header>
+        Courses
+      </header>
+      
+      <div class="controller">
+        <input type="text" class="search" placeholder="Search for courses by name or ID..." />
+        <button class="addCourse">Add Course</button>
+      </div>
+      <!-- Hidden form for adding course -->
+      <div id="overlay" class="overlay" style="display: none;">
+        <div class="course-form" id="courseForm" style="display: none;">
+          <input type="text" id="courseTitle" style="margin-bottom: 10px;" placeholder="Course title..." />
+          <input type="text" id="courseDesc" placeholder="Course description..." />
+          <div class="form-buttons">
+            <button id="submitCourse">Add Course</button>
+            <button id="cancelCourse">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+        <div class="box-container">
+          <!-- add course  -->
+        </div>
+    
+    </main>
+    
+  </div>
+
+  <script src="./js/navbar.js"></script>
+  <script src="./js/course.js"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+/*main content*/
+.main-content {
+    flex: 1;
+    margin-left: 15rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    overflow-y: auto;
+}
+
+.card {
+    background: var(--fullwhite);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s forwards;
+    cursor: pointer;
+}
+
+.card .text {
+    align-items: center;
+    color: #000;
+    font-size: 1.5rem;
+    text-decoration: none;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.row {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.upload-btn,
+.stt-btn {
+    flex: 1;
+    cursor: pointer;
+}
+
+.quick-access .card {
+    flex: 1;
+    background: linear-gradient(135deg, #a8e0c4, #4a6584);
+    color: white;
+    text-align: center;
+}
+
+.quick-access .card:nth-child(2) {
+    background: linear-gradient(135deg, #b28ed9, #4a5384);
+}
+
+.schedule-panel {
+    order: 2;
+    min-width: 10rem;
+    background: var(--fullwhite);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    background: #ede6fa;
+    border-left: 2px solid #ccc;
+}
+
+.calendar {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.sessions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.session-card {
+    background: white;
+    padding: 0.8rem;
+    border-left: 5px solid #ccc;
+    border-radius: 8px;
+    transition: background 0.3s;
+}
+
+.session-card:hover {
+    background: #f0f0f0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar,
+    .right-sidebar {
+        width: 100%;
+    }
+
+    .main-content {
+        order: -1;
+        margin-left: 0;
+        margin-top: 9vh;
+    }
+
+    .schedule-panel {
+        width: 100%;
+        padding: 1rem;
+        border-left: none;
+        border-top: 2px solid #ccc;
+    }
+
+    .row {
+        flex-direction: column;
+    }
+}

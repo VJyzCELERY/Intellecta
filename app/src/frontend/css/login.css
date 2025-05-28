@@ -1,0 +1,217 @@
+:root {
+    --blue: #2D336B;
+    --blue2: #274978;
+    --blue3: #4e67cc;
+    --blue4: #1976d2;
+    --lightblue: #7190e6;
+    --gray: #ADADAD;
+    --white: #f5f3f3;
+    --white2: #e3f2fd;
+    --white3: #ddd;
+    --fullwhite: #ffffff;
+    --black: #272727d0;
+    --red: #cc0000;
+    --cream: #F1FAFF;
+    --red2: #f95959;
+    --orange: #ff9a3c;
+    --light-black: #283a55;
+    --green: #4CAF50;
+}
+
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded';
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: "Aptos";
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(to right, var(--blue) 25%, var(--white) 50%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 400px;
+    background: var(--fullwhite);
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.6s ease-in-out;
+    flex: 1;
+}
+
+.form {
+    padding: 30px;
+    display: none;
+    animation: fadeIn 0.4s ease-in-out forwards;
+}
+
+.form.active {
+    display: block;
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+.input-group {
+    position: relative;
+}
+
+input[type="password"] {
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1.5px solid var(--gray);
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: var(--blue2);
+    color: var(--fullwhite);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--blue);
+    transition: all 0.3s ease;
+}
+
+.switch {
+    text-align: center;
+    margin-top: 10px;
+    cursor: pointer;
+    color: var(--black);
+    transition: all 0.3s ease;
+}
+
+.link-switch {
+    text-decoration: none;
+    color: var(--blue2);
+}
+
+.link-switch:hover {
+
+    text-decoration: underline;
+}
+
+.error {
+    color: var(--red);
+    font-size: 0.9em;
+}
+
+.social-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.social-divider::before,
+.social-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--gray);
+}
+
+.social-divider:not(:empty)::before {
+    margin-right: .75em;
+}
+
+.social-divider:not(:empty)::after {
+    margin-left: .75em;
+}
+
+.social-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    max-height: 2.5rem;
+}
+
+.social-buttons button {
+    flex: 1;
+    margin: 0 5px;
+    background: var(--fullwhite);
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+}
+
+.social-buttons button:hover {
+    transform: translateY(-1px);
+    color: var(--fullwhite);
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.social-buttons .icon img {
+    width: 20px;
+}
+
+.forgot-password {
+    text-align: right;
+    margin-top: -8px;
+    margin-bottom: 10px;
+}
+
+.forgot-password a {
+    color: var(--blue);
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.forgot-password a:hover {
+    transition: 0.3s all ease-in-out;
+    color: var(--red);
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        background: #fff;
+        flex-direction: column;
+        padding: 10px;
+    }
+}
