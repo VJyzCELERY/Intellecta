@@ -48,6 +48,7 @@ async function renderCalendar() {
 
         calendarGrid.appendChild(cell);
     }
+    renderActiveDate();
 }
 
 
@@ -78,10 +79,29 @@ function getEventsForDate(dateStr) {
     });
 }
 
+function renderActiveDate(){
+    const dateDiv = document.querySelector(`div[data-date="${currentActivatedDate}"]`);
+    if(!dateDiv){
+        return;
+    }
+    console.log(dateDiv);
+    dateDiv.classList.add('active_date');
+    
+}
+
+function removeActivateDateRender(){
+    const dateDiv = document.querySelector(`div[data-date="${currentActivatedDate}"]`);
+    if(!dateDiv){
+        return;
+    }
+    dateDiv.classList.remove('active_date');
+}
 
 function activateDate(dateStr){
     console.log(`Activate ${dateStr}`);
+    removeActivateDateRender();
     currentActivatedDate=dateStr;
+    renderActiveDate();
     displayEvents(dateStr);
 }
 
@@ -375,3 +395,10 @@ function toggleRepeatDetailView(){
 renderCalendar();
 displayEvents(null);
 
+document.addEventListener('DOMContentLoaded', function() { 
+    currentCourse='schedule';
+    const chatuploadbutton = document.getElementById('chat-file-upload-btn');
+    if (chatuploadbutton) {
+        chatuploadbutton.remove();
+    }
+});

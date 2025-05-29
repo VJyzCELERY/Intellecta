@@ -36,6 +36,13 @@ class EventManager{
     getUserDir(userId) {
         return path.join(SCHEDULE_DIR, userId);
     }
+    getUserDatabaseFile(userId) {
+        const dbPath = path.join(this.getUserDir(userId), 'schedule.db');
+        if (fs.existsSync(dbPath)) {
+            return fs.readFileSync(dbPath); // Return the raw buffer
+        }
+        return null;
+    }
     getUserScheduleDB(userId){
         const userDbPath = path.join(this.getUserDir(userId),'schedule.db');
         const db = new Database(userDbPath);

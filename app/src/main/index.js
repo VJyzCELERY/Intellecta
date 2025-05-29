@@ -74,9 +74,9 @@ ipcMain.handle('delete-document',(e,{courseId,topicId,fileid}) => CourseManager.
 ipcMain.handle('rename-document',(e,{courseId,topicId,documentId,newTitle})=>CourseManager.renameDocument(courseId,topicId,documentId,newTitle));
 
 ipcMain.handle('load-session',(e,{userId,courseId,topicId})=> ChatManager.loadSession(userId,courseId,topicId));
-ipcMain.on('ChatManager:sendRequest',async(e,prompt)=>{
+ipcMain.on('ChatManager:sendRequest',async(e,{prompt,mode})=>{
   try{
-    for await (const chunk of ChatManager.sendRequest(prompt)){
+    for await (const chunk of ChatManager.sendRequest(prompt,mode)){
       e.sender.send("ChatManager:stream",chunk);
     }
     e.sender.send('ChatManager:stream:end');
@@ -96,3 +96,10 @@ ipcMain.handle('delete-instance',(e,{userId,eventId,startTime})=>EventManager.de
 ipcMain.handle('delete-future-instance',(e,{userId,eventId,startTime})=>EventManager.deleteFutureInstanceSmart(userId,eventId,startTime));
 ipcMain.handle('update-instance-continue',(e,{userId, eventId, startTime, shouldContinue})=>EventManager.updateInstanceContinue(userId, eventId, startTime, shouldContinue));
 ipcMain.handle('get-month-event',(e,{userId,year,month})=> EventManager.getEventsForMonth(userId,year,month));
+ipcMain.handle('export-user-db', (event, userId) => {
+    const dbBuffer = EventManager.getUserDatabaseFile(userId);
+    if (!dbBuffer) {
+        throw new Error('Database not found');
+    }
+    return dbBuffer;
+});

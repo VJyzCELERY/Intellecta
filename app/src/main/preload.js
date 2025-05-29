@@ -100,7 +100,7 @@ contextBridge.exposeInMainWorld('courseAPI',
 );
 
 contextBridge.exposeInMainWorld('chatAPI', {
-  sendPrompt: (prompt) => ipcRenderer.send("ChatManager:sendRequest", prompt),
+  sendPrompt: (prompt,mode) => ipcRenderer.send("ChatManager:sendRequest", prompt,mode),
   onStream: (callback) => {
     // Remove existing listeners first
     ipcRenderer.removeAllListeners("ChatManager:stream");
@@ -135,6 +135,6 @@ contextBridge.exposeInMainWorld('eventAPI',{
   deleteInstance: (userId,eventId,startTime) => ipcRenderer.invoke('delete-instance',{userId,eventId,startTime}),
   deleteUpcomingInstance: (userId,eventId,startTime) => ipcRenderer.invoke('delete-future-instance',{userId,eventId,startTime}),
   updateInstanceContinue: (userId, eventId, startTime, shouldContinue)=> ipcRenderer.invoke('update-instance-continue',{userId, eventId, startTime, shouldContinue}),
-  getMonthEvent: (userId,year,month) => ipcRenderer.invoke('get-month-event',{userId,year,month})
-
+  getMonthEvent: (userId,year,month) => ipcRenderer.invoke('get-month-event',{userId,year,month}),
+  getScheduleDB : async (userId) => {return await ipcRenderer.invoke('export-user-db',{userId})},
 });

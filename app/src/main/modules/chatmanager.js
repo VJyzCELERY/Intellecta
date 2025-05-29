@@ -19,11 +19,11 @@ class ChatManager{
         this.course_dir = path.join(this.local_storage,'courses');
     }
     
-    async *sendRequest(prompt=" "){
+    async *sendRequest(prompt=" ",mode='chat'){
         const response = await fetch(`${this.server_address}/generate`,{
             method:"POST",
             headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({prompt}),
+            body:JSON.stringify({prompt,mode}),
         });
 
         const reader = response.body.getReader();
@@ -103,7 +103,7 @@ class ChatManager{
     }
 
     async loadScheduleSession(userId){
-        
+
     }
 
     changeServer(serverAddress){

@@ -16,7 +16,7 @@ const chatLayout=`
         <input type="text" class="chat-input" id="chat_in" placeholder="Type your message...">
         <div class="button-group">
             <div class="left-button">
-            <button class="btn icon-btn" title="Upload file" onclick="showUploadModal(false)"><span
+            <button class="btn icon-btn" id="chat-file-upload-btn" title="Upload file" onclick="showUploadModal(false)"><span
                 class="material-symbols-outlined">attach_file</span></button>
             </div>
             <button class="btn send-btn"><span class="material-symbols-outlined" onclick="sendPrompt()">arrow_upward</span></button>
@@ -72,7 +72,7 @@ async function loadChat(userId,courseId,topicId){
     });
 }
 
-async function handlePrompt(prompt){
+async function handlePrompt(prompt,mode="chat"){
     const chatMessages = document.querySelector('.chat-messages');
     const messageBubble = document.createElement('div');
     messageBubble.classList.add('message','bot-message');
@@ -81,7 +81,7 @@ async function handlePrompt(prompt){
     
     let markdownBuffer = '';
     
-    window.chatAPI.sendPrompt(prompt);
+    window.chatAPI.sendPrompt(prompt,mode);
     
     // Create unique handlers for this specific message
     const streamHandler = (chunk) => {
