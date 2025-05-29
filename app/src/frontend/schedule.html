@@ -85,41 +85,63 @@
       </div>
 
       <div class="ai-chatbot-container" id="aiChatPanel">
-        <!-- AI Chatbot Panel -->
-        <div class="chat-container">
-          <div class="chat-header">
-            <h1>Intellecta</h1>
-          </div>
-          <div class="chat-messages">
-            <!-- welcoming message -->
-          </div>
-        </div>
-
-        <div class="input-container centered">
-          <input type="text" class="chat-input" placeholder="Type your message...">
-          <div class="button-group">
-            <div class="left-button">
-              <button class="btn icon-btn" title="Upload file" onclick="showUploadModal()"><span
-                  class="material-symbols-outlined">attach_file</span></button>
-            </div>
-            <button class="btn send-btn"><span class="material-symbols-outlined">arrow_upward</span></button>
-          </div>
-        </div>
       </div>
     </main>
-
+    <!-- Event detail modal -->
+    <div id="eventDetailModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeEventDetailModal()">&times;</span>
+        <div id="modalEventDetails"></div>
+      </div>
+    </div>
+    <!-- Delete event modal-->
+     <div id="deleteModal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Delete Event</h3>
+        <p>Choose how to delete the event:</p>
+        <button id="deleteInstance">Delete This Instance</button>
+        <button id="deleteFuture">Delete This Instance and Upcoming Instances</button>
+        <button id="deleteAll">Delete Entire Event</button>
+        <button class="close-btn" onclick="closeDeleteEventModal()">Cancel</button>
+      </div>
+    </div>
     <!-- Event Form (Initially Hidden) -->
     <aside class="side-content">
       <div id="overlay" class="overlay" style="display: none;">
         <div class="event-form" id="eventForm" style="display: none;">
-          <h4>Add Event on <span id="selectedDateText"></span></h4>
+          <h4>Event Details</h4>
+          
           <input type="text" id="eventTitleInput" placeholder="Event Title" />
+          <input type="text" id="eventDescInput" placeholder="Event Description" />
           <div class="eventTimeInput">
-            <input type="time" id="eventTimeInput1" /> - <input type="time" id="eventTimeInput2" />
+            <h4>Event Starts</h4>
+            <input type="date" id="eventDateInputStart" placeholder="Event Start Date" /> - <input type="time" id="eventTimeInputStart" />
+          </div>
+          <div class="eventTimeInput">
+            <h4>Event Ends</h4>
+            <input type="date" id="eventDateInputEnd" placeholder="Event End Date" /> - <input type="time" id="eventTimeInputEnd" />
           </div>
           
+          <div class="eventTimeInput">
+            <input type="checkbox" id="repeat-check" onchange="toggleRepeatDetailView()"> Repeating
+            <div class="event-repeat-detail" id="repeat-detail-viewer">
+                <h4>Repeat Type</h4>
+                <select name="Repeat Type" id="repeat-type-select">
+                  <option value="" disabled selected>Select Repeat Type</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+                <h4>Repeat Interval</h4>
+                <input type="number" id="repeat-event-interval" placeholder="Event Interval" value=1>
+                <h4>Until</h4>
+                <input type="date" id="eventRepeatEndDate" placeholder="Event Repeat End Date" />
+            </div>
+          </div>
+
           <div class="form-buttons">
-            <button id="submitEvent">Add Event</button>
+            <button id="submitEvent" onclick="createEventSchedule()">Add Event</button>
             <button id="cancelEvent">Cancel</button>
           </div>
         </div>
@@ -127,7 +149,7 @@
       
       <!-- Display Events -->
       <div class="event">
-        <button id="openEventForm" class="add-event-btn">+ Add Event</button>
+        <button class="add-event-btn" onclick="showInputModal()">+ Add Event</button>
         <div id="eventList" style="margin-top: 20px;"></div>
       </div>
      </aside>

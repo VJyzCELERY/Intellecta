@@ -425,6 +425,11 @@ async function createNewNote(){
   closeModals();
 }
 
+/**
+ *  This function save the current active note
+ * 
+ * 
+ */
 async function saveNotes(){
   const input_field = document.getElementById('content-editor');
   const content = input_field.innerHTML;

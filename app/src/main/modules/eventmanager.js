@@ -1,0 +1,342 @@
+const { session } = require("electron");
+const fs = require('fs');
+const path = require('path');
+const { parseISO, formatISO, addDays, addWeeks, addMonths, addYears } = require('date-fns');
+const Database = require('better-sqlite3');
+const config = require('./config');
+const userid = 'testuser'
+const SCHEDULE_DIR = config.USER_DIR;
+
+
+/**
+ * EVENT DATA FORMAT
+ * {
+  event_id: "uuid-string",
+  title: "Math Lecture",
+  description: "Weekly math class",
+  repeat: {
+    type: "weekly",   could be "daily", "weekly", "yearly", or null
+    interval: 1,
+    until: null       null = indefinite, or ISO date string like "2025-12-31T23:59:59Z"
+  },
+  instances: [
+    {
+      start: "2025-06-05T10:00:00Z",
+      end: "2025-06-05T11:00:00Z",
+      continue: true    // null = end here, true = continue generating more instances
+    }
+    // For indefinite repeats, system generates first year of instances
+    // When queried beyond generated range, checks last instance's "continue" flag
+    // If continue=true, generates next year chunk automatically
+  ]
+}
+ */
+
+class EventManager{
+    getUserDir(userId) {
+        return path.join(SCHEDULE_DIR, userId);
+    }
+    getUserScheduleDB(userId){
+        const userDbPath = path.join(this.getUserDir(userId),'schedule.db');
+        const db = new Database(userDbPath);
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS EVENT (
+            event_id TEXT PRIMARY KEY,
+            title TEXT,
+            description TEXT,
+            repeat TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS EVENT_DETAILS (
+            event_id TEXT,
+            start TEXT,
+            end TEXT,
+            continue INTEGER DEFAULT NULL,
+            FOREIGN KEY(event_id) REFERENCES EVENT(event_id)
+            );
+        `);
+
+        return db;
+    }
+    
+    generateRepeatingInstances(first, repeat, generateUntil = null) {
+        const results = [first];
+        if (!repeat) return results;
+
+        const interval = repeat.interval || 1;
+        let currentStart = parseISO(first.start);
+        let currentEnd = parseISO(first.end);
+
+        // Calculate end date for this generation chunk
+        let endDate;
+        if (generateUntil) {
+            endDate = parseISO(generateUntil);
+        } else if (repeat.until) {
+            endDate = parseISO(repeat.until);
+        } else {
+            // For indefinite repeats, generate 1 year at a time
+            endDate = addYears(currentStart, 1);
+        }
+
+        const addFn = {
+            daily: addDays,
+            weekly: addWeeks,
+            monthly: addMonths,
+            yearly: addYears
+        }[repeat.type];
+
+        if (!addFn) return results;
+
+        // Generate instances until we reach the end date
+        while (true) {
+            currentStart = addFn(currentStart, interval);
+            currentEnd = addFn(currentEnd, interval);
+
+            // Stop if the next instance would start after the end date
+            if (currentStart > endDate) break;
+
+            const isLastInstance = addFn(currentStart, interval) > endDate;
+            
+            results.push({
+                start: formatISO(currentStart),
+                end: formatISO(currentEnd),
+                continue: repeat.until ? null : (isLastInstance && !repeat.until ? true : null)
+            });
+        }
+
+        return results;
+    }
+
+    generateNextYearChunk(userId, eventId) {
+        const db = this.getUserScheduleDB(userId);
+        
+        // Get event data and last instance
+        const eventStmt = db.prepare(`SELECT * FROM EVENT WHERE event_id = ?`);
+        const event = eventStmt.get(eventId);
+        
+        if (!event || !event.repeat) return { success: false, message: 'Event not found or not repeating' };
+        
+        const repeat = JSON.parse(event.repeat);
+        if (!repeat || repeat.until) return { success: false, message: 'Event has fixed end date' };
+
+        // Get the last instance
+        const lastInstanceStmt = db.prepare(`
+            SELECT * FROM EVENT_DETAILS 
+            WHERE event_id = ? 
+            ORDER BY start DESC 
+            LIMIT 1
+        `);
+        const lastInstance = lastInstanceStmt.get(eventId);
+        
+        if (!lastInstance || lastInstance.continue !== 1) {
+            return { success: false, message: 'No continuation needed' };
+        }
+
+        // Generate next year from the last instance
+        const nextYearStart = addYears(parseISO(lastInstance.start), 1);
+        const firstNewInstance = {
+            start: formatISO(nextYearStart),
+            end: formatISO(addYears(parseISO(lastInstance.end), 1)),
+            continue: null
+        };
+
+        const newInstances = this.generateRepeatingInstances(firstNewInstance, repeat);
+        
+        // Insert new instances
+        const insertDetail = db.prepare(`
+            INSERT INTO EVENT_DETAILS (event_id, start, end, continue)
+            VALUES (?, ?, ?, ?)
+        `);
+
+        const insertMany = db.transaction((items) => {
+            for (const inst of items) {
+                insertDetail.run(
+                    eventId,
+                    inst.start,
+                    inst.end,
+                    inst.continue === true ? 1 : (inst.continue === false ? 0 : null)
+                );
+            }
+        });
+        insertMany(newInstances);
+
+        return { success: true, generated: newInstances.length };
+    }
+
+    createEventForUser(userId, eventData) {
+        const db = this.getUserScheduleDB(userId);
+
+        const insertEvent = db.prepare(`
+            INSERT INTO EVENT (event_id, title, description, repeat)
+            VALUES (?, ?, ?, ?)
+        `);
+
+        const insertDetail = db.prepare(`
+            INSERT INTO EVENT_DETAILS (event_id, start, end, continue)
+            VALUES (?, ?, ?, ?)
+        `);
+
+        const repeatJson = JSON.stringify(eventData.repeat || null);
+        insertEvent.run(eventData.event_id, eventData.title, eventData.description, repeatJson);
+
+        let instances = eventData.instances;
+        if (eventData.repeat) {
+            const firstInstance = eventData.instances[0];
+            instances = this.generateRepeatingInstances(firstInstance, eventData.repeat);
+        }
+
+        const insertMany = db.transaction((items) => {
+            for (const inst of items) {
+                insertDetail.run(
+                    eventData.event_id,
+                    inst.start,
+                    inst.end,
+                    inst.continue === true ? 1 : (inst.continue === false ? 0 : null)
+                );
+            }
+        });
+        insertMany(instances);
+
+        return { success: true };
+    }
+
+    deleteEvent(userId, eventId) {
+        const db = this.getUserScheduleDB(userId);
+        const deleteDetails = db.prepare(`DELETE FROM EVENT_DETAILS WHERE event_id = ?`);
+        const deleteEvent = db.prepare(`DELETE FROM EVENT WHERE event_id = ?`);
+        const tx = db.transaction(() => {
+            deleteDetails.run(eventId);
+            deleteEvent.run(eventId);
+        });
+        tx();
+        return { success: true };
+    }
+
+    deleteSingleInstanceSmart(userId, eventId, startTime) {
+        const db = this.getUserScheduleDB(userId);
+
+        const countStmt = db.prepare(`
+            SELECT COUNT(*) as count FROM EVENT_DETAILS WHERE event_id = ?
+        `);
+        const { count } = countStmt.get(eventId);
+
+        if (count <= 1) {
+            return this.deleteEvent(userId, eventId);
+        } else {
+            return this.deleteSingleInstance(userId, eventId, startTime);
+        }
+    }
+
+    deleteFutureInstanceSmart(userId, eventId, startTime) {
+        const db = this.getUserScheduleDB(userId);
+
+        const futureCountStmt = db.prepare(`
+            SELECT COUNT(*) as count FROM EVENT_DETAILS WHERE event_id = ? AND start >= ?
+        `);
+        const totalCountStmt = db.prepare(`
+            SELECT COUNT(*) as count FROM EVENT_DETAILS WHERE event_id = ?
+        `);
+
+        const { count: futureCount } = futureCountStmt.get(eventId, startTime);
+        const { count: totalCount } = totalCountStmt.get(eventId);
+
+        if (futureCount === totalCount) {
+            return this.deleteEvent(userId, eventId);
+        } else {
+            return this.deleteInstanceAndFuture(userId, eventId, startTime);
+        }
+    }
+
+
+    deleteSingleInstance(userId, eventId, startTime) {
+        const db = this.getUserScheduleDB(userId);
+        const deleteStmt = db.prepare(`
+            DELETE FROM EVENT_DETAILS 
+            WHERE event_id = ? AND start = ?
+        `);
+        deleteStmt.run(eventId, startTime);
+        return { success: true };
+    }
+
+    deleteInstanceAndFuture(userId, eventId, startTime) {
+        const db = this.getUserScheduleDB(userId);
+        const deleteStmt = db.prepare(`
+            DELETE FROM EVENT_DETAILS 
+            WHERE event_id = ? AND start >= ?
+        `);
+        deleteStmt.run(eventId, startTime);
+        return { success: true };
+    }
+
+    updateInstanceContinue(userId, eventId, startTime, shouldContinue) {
+        const db = this.getUserScheduleDB(userId);
+        const update = db.prepare(`
+            UPDATE EVENT_DETAILS
+            SET continue = ?
+            WHERE event_id = ? AND start = ?
+        `);
+        update.run(shouldContinue === true ? 1 : (shouldContinue === false ? 0 : null), eventId, startTime);
+        return { success: true };
+    }
+
+    getEventsForMonth(userId, year, month) {
+        const db = this.getUserScheduleDB(userId);
+
+        // Format range: YYYY-MM-DD
+        const from = new Date(Date.UTC(year, month - 1, 1)).toISOString();
+        const to = new Date(Date.UTC(year, month, 1)).toISOString();
+
+        const stmt = db.prepare(`
+            SELECT e.event_id, e.title, e.description, e.repeat,
+                d.start, d.end, d.continue
+            FROM EVENT_DETAILS d
+            JOIN EVENT e ON d.event_id = e.event_id
+            WHERE d.start <= ? AND d.end >= ?
+        `);
+        const rows = stmt.all(to, from);
+
+        // Check if we need to generate more instances for any indefinite events
+        const futureDate = new Date(Date.UTC(year, month, 1));
+        const eventsNeedingGeneration = new Set();
+
+        for (const row of rows) {
+            if (row.repeat) {
+                const repeat = JSON.parse(row.repeat);
+                if (repeat && !repeat.until) {
+                    // Check if this is near the end of generated instances
+                    const lastInstanceStmt = db.prepare(`
+                        SELECT start, continue FROM EVENT_DETAILS 
+                        WHERE event_id = ? 
+                        ORDER BY start DESC 
+                        LIMIT 1
+                    `);
+                    const lastInstance = lastInstanceStmt.get(row.event_id);
+                    
+                    if (lastInstance && lastInstance.continue === 1) {
+                        const lastDate = parseISO(lastInstance.start);
+                        const monthsUntilEnd = (lastDate.getTime() - futureDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
+                        
+                        // If we're within 3 months of the last generated instance, generate more
+                        if (monthsUntilEnd < 3) {
+                            eventsNeedingGeneration.add(row.event_id);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate more instances if needed
+        for (const eventId of eventsNeedingGeneration) {
+            this.generateNextYearChunk(userId, eventId);
+        }
+
+        // Re-query if we generated new instances
+        if (eventsNeedingGeneration.size > 0) {
+            return stmt.all(from, to);
+        }
+        console.log(rows);
+        return rows;
+    }
+}
+
+module.exports = EventManager;

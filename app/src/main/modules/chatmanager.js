@@ -3,15 +3,22 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config');
 const { v4: uuidv4 } = require('uuid');
-
-const COURSES_DIR = config.COURSES_DIR;
+const userid = 'testuser'
+const USER_DIR = config.USER_DIR;
 const CHAT_FILE = 'chat_history.json';
 
 class ChatManager{
     constructor(server_address){
         this.server_address = server_address;
-        this.local_storage = '';
+        this.local_storage = path.join(USER_DIR,userid);
+        this.course_dir =path.join(this.local_storage,'courses');
     }
+
+    setActiveUser(userId){
+        this.local_storage = path.join(USER_DIR,userId);
+        this.course_dir = path.join(this.local_storage,'courses');
+    }
+    
     async *sendRequest(prompt=" "){
         const response = await fetch(`${this.server_address}/generate`,{
             method:"POST",
@@ -83,7 +90,6 @@ class ChatManager{
     }
     async loadSession(userId,courseId,topicId){
         const sessionId = path.join(userId,courseId,topicId);
-        this.local_storage=path.join(COURSES_DIR,courseId,topicId);
         
         const response = await fetch(`${this.server_address}/loadSession`,{
             method:"POST",
@@ -95,6 +101,11 @@ class ChatManager{
             console.error("Failed loading session");
         }
     }
+
+    async loadScheduleSession(userId){
+        
+    }
+
     changeServer(serverAddress){
         this.server_address=serverAddress;
     }
@@ -107,7 +118,6 @@ class ChatManager{
             sessionId = path.join(userId,courseId);
         }
         console.log(`Deleting ${sessionId}`);
-        this.local_storage='';
         const response = await fetch(`${this.server_address}/delete-session`,{
             method:"POST",
             headers:{"Content-Type":"text/plain"},
@@ -119,10 +129,10 @@ class ChatManager{
         }
     }
 
-    async loadChatHistory(){
+    async loadChatHistory(courseId,topicId){
         // Ensure the directory exists
         // console.log(`${userId},${courseId},${topicId}`);
-        const chatDirectory=this.local_storage;
+        const chatDirectory=path.join(this.course_dir,courseId,topicId);
         const historyDir=path.join(chatDirectory,CHAT_FILE);
         console.log(`Loading from ${historyDir}`);
         if (!fs.existsSync(chatDirectory)) {
@@ -137,14 +147,14 @@ class ChatManager{
         return []; // Return an empty array if no chat history exists
     }
 
-    async saveMessage(message,sender){
+    async saveMessage(message,sender,courseId,topicId){
         const chatDirectory=this.local_storage;
         const historyDir=path.join(chatDirectory,CHAT_FILE);
         console.log(`Saving to ${historyDir}`);
         if(!fs.existsSync(chatDirectory)){
             fs.mkdirSync(chatDirectory,{recursive:true});
         }
-        const history = await this.loadChatHistory();
+        const history = await this.loadChatHistory(courseId,topicId);
         history.push({sender:sender,message:message});
         fs.writeFileSync(historyDir,JSON.stringify(history,null,2));
 

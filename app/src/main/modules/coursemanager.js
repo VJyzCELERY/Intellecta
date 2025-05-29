@@ -3,13 +3,21 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config');
 const { v4: uuidv4 } = require('uuid');
-
-const COURSES_DIR = config.COURSES_DIR;
+const userid = 'testuser'
+const USER_DIR = config.USER_DIR;
 
 class CourseManager {
-  static createCourse({ title, description }) {
+  constructor(){
+    this.course_dir =path.join(USER_DIR,userid,'courses');
+  }
+
+  setActiveUser(userId){
+    this.course_dir = path.join(USER_DIR,userId,'courses');
+  }
+
+  createCourse({ title, description }) {
     const id = uuidv4();
-    const courseDir = path.join(COURSES_DIR, id);
+    const courseDir = path.join(this.course_dir, id);
     fs.mkdirSync(courseDir, { recursive: true });
 
     const metadata = { id, title, description, createdAt: new Date() };
@@ -17,8 +25,8 @@ class CourseManager {
 
     return metadata;
   }
-  static deleteCourse(id){
-    const courseDir = path.join(COURSES_DIR,id);
+  deleteCourse(id){
+    const courseDir = path.join(this.course_dir,id);
     try{
       fs.rmSync(courseDir,{recursive:true,force:true});
 
@@ -26,11 +34,11 @@ class CourseManager {
       console.log("Failed deleting directory : ",e);
     }
   }
-  static getCourses() {
-    fs.mkdirSync(COURSES_DIR,{recursive:true});
-    const dirs = fs.readdirSync(COURSES_DIR);
+  getCourses() {
+    fs.mkdirSync(this.course_dir,{recursive:true});
+    const dirs = fs.readdirSync(this.course_dir);
     return dirs.map(dir => {
-      const metaPath = path.join(COURSES_DIR, dir, 'metadata.json');
+      const metaPath = path.join(this.course_dir, dir, 'metadata.json');
       if (fs.existsSync(metaPath)) {
         return JSON.parse(fs.readFileSync(metaPath));
       }
@@ -38,9 +46,9 @@ class CourseManager {
     }).filter(Boolean);
   }
 
-  static createTopic(courseId, topicTitle) {
+  createTopic(courseId, topicTitle) {
     const topicId = `topic_${Date.now()}`;
-    const topicDir = path.join(COURSES_DIR, courseId, topicId);
+    const topicDir = path.join(this.course_dir, courseId, topicId);
     fs.mkdirSync(topicDir, { recursive: true });
     console.log(topicTitle);
     const metadata = {
@@ -56,14 +64,14 @@ class CourseManager {
     return metadata;
   }
 
-  static deleteTopic(courseId,topicId){
-    const topicDir = path.join(COURSES_DIR,courseId,topicId);
+  deleteTopic(courseId,topicId){
+    const topicDir = path.join(this.course_dir,courseId,topicId);
     fs.rmSync(topicDir,{recursive:true,force:true});
   }
   
 
-  static getTopics(courseId) {
-    const coursePath = path.join(COURSES_DIR, courseId);
+  getTopics(courseId) {
+    const coursePath = path.join(this.course_dir, courseId);
     const dirs = fs.readdirSync(coursePath).filter(f => f.startsWith('topic_'));
 
     return dirs.map(dir => {
@@ -75,8 +83,8 @@ class CourseManager {
     }).filter(Boolean);
   }
 
-  static renameTopic(courseId,topicId,topicTitle){
-    const coursePath = path.join(COURSES_DIR, courseId);
+  renameTopic(courseId,topicId,topicTitle){
+    const coursePath = path.join(this.course_dir, courseId);
     const topicDir = path.join(coursePath,topicId);
     if(!fs.existsSync(topicDir)){
       return;
@@ -90,8 +98,8 @@ class CourseManager {
 
   }
 
-  static renameDocument(courseId,topicId,documentId,newTitle){
-    const documentPath = path.join(COURSES_DIR, courseId, topicId, 'documents');
+  renameDocument(courseId,topicId,documentId,newTitle){
+    const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     let metadata = this.loadMetadata(documentPath);
     if(!metadata){
       return;
@@ -103,7 +111,7 @@ class CourseManager {
     this.saveMetadata(documentPath,metadata);
   }
 
-  static loadMetadata(basepath){
+  loadMetadata(basepath){
     const metadataFile = path.join(basepath, 'metadata.json')
     let metadata=[]
     if (fs.existsSync(metadataFile)) {
@@ -116,7 +124,7 @@ class CourseManager {
     return metadata;
   }
 
-  static saveMetadata(basepath,metadata){
+  saveMetadata(basepath,metadata){
     const metadataFile = path.join(basepath, 'metadata.json')
     try {
       fs.writeFileSync(metadataFile, JSON.stringify(metadata, null, 2));
@@ -125,8 +133,8 @@ class CourseManager {
     }
   }
 
-  static saveNotes(courseId,topicId,notesId,content){
-    const documentPath = path.join(COURSES_DIR, courseId, topicId, 'documents');
+  saveNotes(courseId,topicId,notesId,content){
+    const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     let metadata = this.loadMetadata(documentPath);
     if(!metadata){
       return;
@@ -136,8 +144,8 @@ class CourseManager {
     fs.writeFileSync(note.path,content,'utf-8');
   }
 
-  static getDocuments(courseId,topicId){
-    const documentPath = path.join(COURSES_DIR, courseId, topicId, 'documents');
+  getDocuments(courseId,topicId){
+    const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     if (!fs.existsSync(documentPath)) {
       fs.mkdirSync(documentPath);
     }
@@ -162,8 +170,8 @@ class CourseManager {
 
   }
 
-  static uploadDocument(courseId,topicId,files){
-    const documentPath = path.join(COURSES_DIR, courseId, topicId, 'documents');
+  uploadDocument(courseId,topicId,files){
+    const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     if (!fs.existsSync(documentPath)) fs.mkdirSync(documentPath, { recursive: true });
     let metadata = this.loadMetadata(documentPath);
 
@@ -198,8 +206,8 @@ class CourseManager {
     this.saveMetadata(documentPath,metadata);
     return true;
   }
-  static deleteDocument(courseId,topicId,fileid){
-    const documentPath = path.join(COURSES_DIR, courseId, topicId, 'documents');
+  deleteDocument(courseId,topicId,fileid){
+    const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     let metadata=this.loadMetadata(documentPath);
     const index = metadata.findIndex(data=>data.fileid===fileid);
     const doc = metadata.splice(index, 1)[0];

@@ -15,7 +15,13 @@
   "author": "chris",
   "license": "MIT",
   "dependencies": {
+    "@fullcalendar/core": "^6.1.17",
+    "@fullcalendar/daygrid": "^6.1.17",
+    "@fullcalendar/interaction": "^6.1.17",
+    "@fullcalendar/timegrid": "^6.1.17",
     "@tailwindcss/postcss": "^4.0.15",
+    "better-sqlite3": "^11.10.0",
+    "date-fns": "^4.1.0",
     "dompurify": "^3.2.6",
     "electron-squirrel-startup": "^1.0.1",
     "jsdom": "^26.1.0",

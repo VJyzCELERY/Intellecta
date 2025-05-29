@@ -1,7 +1,10 @@
 const { app, BrowserWindow, ipcMain,dialog} = require('electron');
 const path = require('node:path');
 const fs = require('fs');
-const CourseManager = require('./modules/coursemanager');
+const EventManagerClass = require('./modules/eventmanager');
+const EventManager = new EventManagerClass();
+const CourseManagerClass = require('./modules/coursemanager');
+const CourseManager = new CourseManagerClass();
 const ChatManagerClass = require('./modules/chatmanager');
 const ChatManager = new ChatManagerClass("http://localhost:8000");
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -81,8 +84,15 @@ ipcMain.on('ChatManager:sendRequest',async(e,prompt)=>{
     e.sender.send("ChatManager:error",err.message);
   }
 });
-ipcMain.handle('load-history',()=>ChatManager.loadChatHistory());
-ipcMain.handle('save-chat',(e,{message,sender})=>ChatManager.saveMessage(message,sender));
+ipcMain.handle('load-history',(e,{courseId,topicId})=>ChatManager.loadChatHistory(courseId,topicId));
+ipcMain.handle('save-chat',(e,{message,sender,courseId,topicId})=>ChatManager.saveMessage(message,sender,courseId,topicId));
 ipcMain.handle('chat-file-upload',(e,{files,immediate})=>ChatManager.uploadFile(files,immediate));
 ipcMain.handle('chat-file-delete',(e,{ids,types})=>ChatManager.deleteFile(ids,types));
 ipcMain.handle('delete-session',(e,{userId,courseId,topicId})=>ChatManager.deleteSession(userId,courseId,topicId));
+
+ipcMain.handle('create-event',(e,{userId,eventData})=>EventManager.createEventForUser(userId,eventData));
+ipcMain.handle('delete-event',(e,{userId,eventId})=>EventManager.deleteEvent(userId,eventId));
+ipcMain.handle('delete-instance',(e,{userId,eventId,startTime})=>EventManager.deleteSingleInstanceSmart(userId,eventId,startTime));
+ipcMain.handle('delete-future-instance',(e,{userId,eventId,startTime})=>EventManager.deleteFutureInstanceSmart(userId,eventId,startTime));
+ipcMain.handle('update-instance-continue',(e,{userId, eventId, startTime, shouldContinue})=>EventManager.updateInstanceContinue(userId, eventId, startTime, shouldContinue));
+ipcMain.handle('get-month-event',(e,{userId,year,month})=> EventManager.getEventsForMonth(userId,year,month));

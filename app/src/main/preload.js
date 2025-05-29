@@ -20,27 +20,27 @@ function renderMath(text) {
   }
 
   return text
-    // Handle block math: \[...\] (process first to avoid conflicts)
+    // Handle block math: \[...\]
     .replace(/\\\[(.+?)\\\]/gs, (_, math) => 
       safeKatexRender(math, { displayMode: true, output: 'mathml' })
     )
-    // Handle inline math: \(...\) (process before other parentheses patterns)
+    // Handle inline math: \(...\) 
     .replace(/\\\((.+?)\\\)/gs, (_, math) => 
       safeKatexRender(math, { displayMode: false, output: 'mathml' })
     )
-    // Block math: $$...$$ (ensure proper matching)
+    // Block math: $$...$$
     .replace(/\$\$([^$]+?)\$\$/g, (_, math) =>
       safeKatexRender(math, { displayMode: true, output: 'mathml' })
     )
-    // Inline math: $...$ (improved negative lookbehind/lookahead)
+    // Inline math: $...$ 
     .replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_, math) =>
       safeKatexRender(math, { displayMode: false, output: 'mathml' })
     )
-    // Your custom style: [\math...] → block (improved pattern)
+    // Your custom style: [\math...]
     .replace(/\[(\\\w[^\]]*)\]/g, (_, math) =>
       safeKatexRender(math, { displayMode: true, output: 'mathml' })
     )
-    // Your custom style: (\math...) → inline (improved pattern)
+    // Your custom style: (\math...)
     .replace(/\((\\\w[^)]*)\)/g, (_, math) =>
       safeKatexRender(math, { displayMode: false, output: 'mathml' })
     );
@@ -122,9 +122,19 @@ contextBridge.exposeInMainWorld('chatAPI', {
     ipcRenderer.removeAllListeners("ChatManager:stream:error");
   },
   loadSession: (userId,courseId,topicId) => ipcRenderer.invoke('load-session',{userId,courseId,topicId}),
-  loadHistory: () => ipcRenderer.invoke('load-history'),
-  saveChat: (message,sender) => ipcRenderer.invoke('save-chat',{message,sender}),
+  loadHistory: (courseId,topicId) => ipcRenderer.invoke('load-history',{courseId,topicId}),
+  saveChat: (message,sender,courseId,topicId) => ipcRenderer.invoke('save-chat',{message,sender,courseId,topicId}),
   uploadFile: (files,immediate) => ipcRenderer.invoke('chat-file-upload',{files,immediate}),
   deleteFile:(ids,types) => ipcRenderer.invoke('chat-file-delete',{ids,types}),
   deleteSession: (userId,courseId,topicId) => ipcRenderer.invoke('delete-session',{userId,courseId,topicId})
+});
+
+contextBridge.exposeInMainWorld('eventAPI',{
+  createEvent: (userId,eventData) => ipcRenderer.invoke('create-event',{userId,eventData}),
+  deleteEvent: (userId,eventId) => ipcRenderer.invoke('delete-event',{userId,eventId}),
+  deleteInstance: (userId,eventId,startTime) => ipcRenderer.invoke('delete-instance',{userId,eventId,startTime}),
+  deleteUpcomingInstance: (userId,eventId,startTime) => ipcRenderer.invoke('delete-future-instance',{userId,eventId,startTime}),
+  updateInstanceContinue: (userId, eventId, startTime, shouldContinue)=> ipcRenderer.invoke('update-instance-continue',{userId, eventId, startTime, shouldContinue}),
+  getMonthEvent: (userId,year,month) => ipcRenderer.invoke('get-month-event',{userId,year,month})
+
 });

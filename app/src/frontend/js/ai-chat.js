@@ -1,4 +1,6 @@
 let sessionId = null;
+let currentCourse = '';
+let currentTopic = '';
 const chatPanel = document.getElementById('aiChatPanel');
 const chatLayout=`
 <div class="chat-body">
@@ -31,9 +33,11 @@ async function upload(){
 
 async function loadChatSession(userId,courseId,topicId){
     console.log(courseId);
+    currentCourse=courseId;
     if(topicId === null){
         return;
     }
+    currentTopic=topicId;
     await window.chatAPI.loadSession(userId,courseId,topicId);
 }
 // ai toggle
@@ -54,7 +58,7 @@ function toggleAIChat() {
 const chatMessages = document.querySelector('.chat-messages');
 
 async function loadChat(userId,courseId,topicId){
-    const history = await window.chatAPI.loadHistory(userId,courseId,topicId);
+    const history = await window.chatAPI.loadHistory(courseId,topicId);
     const chatMessages = document.querySelector('.chat-messages');
     chatMessages.innerHTML = '';
     history.forEach(msg => {
@@ -93,8 +97,8 @@ async function handlePrompt(prompt){
         // Remove listeners after stream ends
         window.chatAPI.removeStreamListeners();
         // Save the complete message to history if needed
-        window.chatAPI.saveChat(prompt, 'user-message');
-        window.chatAPI.saveChat(markdownBuffer, 'bot-message');
+        window.chatAPI.saveChat(prompt, 'user-message',currentCourse,currentTopic);
+        window.chatAPI.saveChat(markdownBuffer, 'bot-message',currentCourse,currentTopic);
         
     };
     
