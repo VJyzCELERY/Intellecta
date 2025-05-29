@@ -1,5 +1,5 @@
 from fastapi.responses import StreamingResponse
-from fastapi import FastAPI,UploadFile,File,BackgroundTasks,Request
+from fastapi import FastAPI,UploadFile,File,BackgroundTasks,Request,Form
 from modules import config,LLMModules
 from modules.EmbeddingModules import EMBEDDING_MODEL,split_text
 from modules.WhisperModules import WhisperNoFFmpeg
@@ -21,6 +21,15 @@ app = FastAPI()
 UPLOAD_FOLDER =config.UPLOAD_FOLDER
 files_memory = []
 process_new_file = False
+
+@app.post("/import-db")
+async def import_db(userId: str = Form(...), dbFile: UploadFile = File(...)):
+    # Save the uploaded file to disk
+    binary_data  = await dbFile.read()
+    if llm_manager.scheduleManager == None:
+        llm_manager._load_schedulemanager(userId)
+    llm_manager.import_database(binary_data)
+    return {"message": f"DB for user {userId} imported successfully"}
 
 @app.post('/delete-session')
 async def delete_session(request : Request):
@@ -85,13 +94,15 @@ async def generate(prompt: dict):
         print('Session not loaded')
         return {"error": "Session not loaded"}
     user_prompt = prompt["prompt"]
+    mode = prompt["mode"]
+    print(mode)
     paths = []
     if process_new_file:
         paths = [file.path for file in files_memory]
         ids = [file.id for file in files_memory]
         llm_manager.process_file(file_paths=paths,file_ids=ids)
         process_new_file=False
-    formatted_prompt = llm_manager.format_prompt(user_prompt,paths)
+    formatted_prompt = llm_manager.format_prompt(user_prompt,paths,mode=mode)
     files_memory=[]
     if os.path.isdir(UPLOAD_FOLDER):
         shutil.rmtree(UPLOAD_FOLDER)
@@ -102,10 +113,22 @@ async def generate(prompt: dict):
 async def load_session(request : Request):
     global llm_manager,UPLOAD_FOLDER
     session_id = (await request.body()).decode("utf-8").strip()
-    llm_manager._update_session(session_id)
-    UPLOAD_FOLDER = os.path.join('index',session_id,'upload')
+    normalized_path = os.path.normpath(session_id)
+
+
+    print(f'session id : {normalized_path}')
+    if normalized_path.endswith(os.path.join('', 'schedule')):
+        user_id = os.path.dirname(normalized_path)
+        llm_manager._load_schedulemanager(user_id)
+    else:
+        llm_manager._update_session(session_id)
+        UPLOAD_FOLDER = os.path.join('index',session_id,'upload')
 
     return {"message": "Session loaded successfully"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 if __name__ == "__main__":
     uvicorn.run(app,host="0.0.0.0",port=8000)

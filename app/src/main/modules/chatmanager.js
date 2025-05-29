@@ -18,7 +18,17 @@ class ChatManager{
         this.local_storage = path.join(USER_DIR,userId);
         this.course_dir = path.join(this.local_storage,'courses');
     }
+    async exportDB(userId,dbBuffer){
+        const formData = new FormData();
+        formData.append('userId', userId);
+        formData.append('dbFile', new Blob([dbBuffer]), 'schedule.db');
+        await fetch(`${this.server_address}/import-db`, {
+            method: 'POST',
+            body: formData
+        });
     
+    }
+
     async *sendRequest(prompt=" ",mode='chat'){
         const response = await fetch(`${this.server_address}/generate`,{
             method:"POST",

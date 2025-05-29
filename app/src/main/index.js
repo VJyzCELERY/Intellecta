@@ -96,10 +96,10 @@ ipcMain.handle('delete-instance',(e,{userId,eventId,startTime})=>EventManager.de
 ipcMain.handle('delete-future-instance',(e,{userId,eventId,startTime})=>EventManager.deleteFutureInstanceSmart(userId,eventId,startTime));
 ipcMain.handle('update-instance-continue',(e,{userId, eventId, startTime, shouldContinue})=>EventManager.updateInstanceContinue(userId, eventId, startTime, shouldContinue));
 ipcMain.handle('get-month-event',(e,{userId,year,month})=> EventManager.getEventsForMonth(userId,year,month));
-ipcMain.handle('export-user-db', (event, userId) => {
+ipcMain.handle('export-user-db', (event, {userId}) => {
     const dbBuffer = EventManager.getUserDatabaseFile(userId);
     if (!dbBuffer) {
-        throw new Error('Database not found');
+      throw new Error('Database not found');
     }
-    return dbBuffer;
+    ChatManager.exportDB(userId,dbBuffer);
 });

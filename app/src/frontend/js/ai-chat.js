@@ -1,6 +1,7 @@
 let sessionId = null;
 let currentCourse = '';
 let currentTopic = '';
+let mode = 'chat';
 const chatPanel = document.getElementById('aiChatPanel');
 const chatLayout=`
 <div class="chat-body">
@@ -72,7 +73,7 @@ async function loadChat(userId,courseId,topicId){
     });
 }
 
-async function handlePrompt(prompt,mode="chat"){
+async function handlePrompt(prompt){
     const chatMessages = document.querySelector('.chat-messages');
     const messageBubble = document.createElement('div');
     messageBubble.classList.add('message','bot-message');

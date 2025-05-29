@@ -4,6 +4,7 @@ import json
 import os
 from modules.FAISSModules import ImageFaissManager,DocumentFaissManager,HistoryFaissManager,AudioFaissManager
 from modules.WhisperModules import WhisperNoFFmpeg
+from modules.ScheduleModule import ScheduleDBManager
 
 class LLMManager:
     def __init__(self,embedding_model,stt_model : WhisperNoFFmpeg ,session_id="General",temperature=0.5,top_k=40,top_p=0.9):
@@ -16,6 +17,7 @@ class LLMManager:
         self.session_id=session_id
         self.latest_file = []
         self.current_prompt=""
+        self.scheduleManager : ScheduleDBManager = None
         self.imageManager : ImageFaissManager = None
         self.docManager : DocumentFaissManager = None
         self.histManager : HistoryFaissManager = None
@@ -30,6 +32,13 @@ class LLMManager:
     def _update_session(self,session_id):
         self.session_id=session_id
         self._load_faiss()
+
+    def _load_schedulemanager(self,userId):
+        self.scheduleManager = ScheduleDBManager(userId)
+        print(f'Loaded schedule manager : {self.scheduleManager}')
+
+    def import_database(self,binary_data):
+        self.scheduleManager.import_database(binary_data=binary_data)
 
     def faiss_trained(self):
         return (
@@ -127,13 +136,12 @@ class LLMManager:
                 # Check if we're leaving thinking mode
                 if "</think>" in text:
                     in_thinking = False
-                    # Only yield content after </thinking>
+                    # Only yield content after </think>
                     after_thinking = text.split("</think>", 1)
                     if len(after_thinking) > 1:
                         yield json.dumps({'text': after_thinking[1]}) + '\n'
                     continue
                 
-                # Only yield if we're not in thinking mode
                 if not in_thinking:
                     yield json.dumps({'text': text}) + '\n'
         print("================== EOF Prompt ===================")
@@ -164,7 +172,62 @@ class LLMManager:
 
         return formatted
 
-    def format_prompt(self,user_prompt,latest_upload=None):
+    
+
+    def format_prompt_schedule(self,user_prompt):
+        model_path = os.path.basename(config.MODEL_PATH)
+        model_name = os.path.splitext(model_path)[0]
+        def format_events_markdown(events):
+            if not events:
+                return "No upcoming events."
+            lines = ["| Title | Start | End | Description |", "|---|---|---|---|"]
+            for e in events:
+                lines.append(f"| **{e['title']}** | {e['start']} | {e['end']} | {e['description']} |")
+            return "\n".join(lines)
+        events = self.scheduleManager.get_upcoming_events(3)
+        events_md = format_events_markdown(events)
+        prompt = [
+            {"role": "system", "content": 
+f"""You are {model_name}, a helpful AI assistant specializing in time management.
+
+## Your Task
+Analyze the user schedule and help them manage their time according to their current schedule and request.
+
+## Response Format
+Use markdown formatting with the following structure:
+
+### Text Formatting
+- **Bold** for key terms, important concepts, and definitions  
+- *Italics* for emphasis and foreign terms
+- `code formatting` for technical terms and specific values
+- > Blockquotes for important notes or definitions
+
+### Organization
+- ## Main headers for primary topics
+- ### Subheaders for detailed sections
+- **Bullet points** for lists and categories
+- **Numbered lists** for steps and processes
+- **Tables** for comparisons (use | syntax)
+
+### Mathematical Content
+- $inline math$ for simple formulas within text
+- $$block math$$ for complex equations
+- Always explain variables and symbols after formulas
+
+## User Schedule Summary
+{events_md}
+
+Provide your response directly based on the user's request and schedule.
+"""
+            },{"role": "user", "content": user_prompt}
+        ]
+        print(prompt)
+            
+        return prompt
+
+    def format_prompt(self,user_prompt,latest_upload=None,mode="chat"):
+        if mode == 'schedule':
+            return self.format_prompt_schedule(user_prompt)
         relevant_entries = []
         model_path = os.path.basename(config.MODEL_PATH)
         model_name = os.path.splitext(model_path)[0]
@@ -184,7 +247,7 @@ class LLMManager:
                 )
         prompt = [
             {"role": "system", "content": 
-f"""You are {model_name}, a helpful AI assistant specializing in educational content. You help users study and work on projects by analyzing their materials and providing clear explanations.
+f"""You are {model_name}, a helpful AI assistant. You help users study and work on projects by analyzing their materials and providing clear explanations.
 
 ## Your Task
 Analyze the files from the current session and provide comprehensive explanations. If data is unclear, interpret it using your knowledge and explain your reasoning. You may expand upon the information in the files or use your own knowledge if no files are present.

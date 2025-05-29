@@ -244,6 +244,7 @@ async function createEventSchedule(){
     }
 
     await window.eventAPI.createEvent(userId,event_data);
+    window.eventAPI.exportDB(userId);
     renderCalendar();
     closeInputModal();
     
@@ -348,6 +349,7 @@ async function deleteSingleInstance(eventId,startTime){
     renderCalendar();
     closeEventDetailModal();
     await updateEventList();
+    window.eventAPI.exportDB(userId);
     displayEvents(currentActivatedDate);
 }
 
@@ -356,6 +358,7 @@ async function deleteFutureInstance(eventId,startTime){
     renderCalendar();
     closeEventDetailModal();
     await updateEventList();
+    window.eventAPI.exportDB(userId);
     displayEvents(currentActivatedDate);
 }
 
@@ -364,6 +367,7 @@ async function deleteEvent(eventId){
     renderCalendar();
     closeEventDetailModal();
     await updateEventList();
+    window.eventAPI.exportDB(userId);
     displayEvents(currentActivatedDate);
 }
 
@@ -395,8 +399,16 @@ function toggleRepeatDetailView(){
 renderCalendar();
 displayEvents(null);
 
+
 document.addEventListener('DOMContentLoaded', function() { 
+    try{
+        window.chatAPI.loadSession(userId,'schedule','');
+
+    }catch(error){
+        console.log('Failed to connect to server : ',error);
+    }
     currentCourse='schedule';
+    mode='schedule'
     const chatuploadbutton = document.getElementById('chat-file-upload-btn');
     if (chatuploadbutton) {
         chatuploadbutton.remove();
