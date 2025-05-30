@@ -7,7 +7,7 @@ DEFAULT_CONFIG = {
     "CHUNK_SIZE":512,
     "MODEL_PATH":"./models/DeepseekR1.gguf",
     "INDEX_BASE_FOLDER":"./index",
-    "SCHEDULE_BASE_FOLDER":"./schedules",
+    "SCHEDULE_BASE_FOLDER":"./userdata",
     "FAISS_DIM":384,
     "FAISS_NLIST":100,
     "N_GPU_LAYERS":0,

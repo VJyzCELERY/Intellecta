@@ -28,10 +28,6 @@ const chatLayout=`
 
 chatPanel.innerHTML=chatLayout;
 
-async function upload(){
-    
-}
-
 async function loadChatSession(userId,courseId,topicId){
     console.log(courseId);
     currentCourse=courseId;

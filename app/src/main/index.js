@@ -1,3 +1,7 @@
+global.user = {
+  id : 'testuser',
+  name : 'Some User'
+}
 const { app, BrowserWindow, ipcMain,dialog} = require('electron');
 const path = require('node:path');
 const fs = require('fs');
@@ -7,11 +11,17 @@ const CourseManagerClass = require('./modules/coursemanager');
 const CourseManager = new CourseManagerClass();
 const ChatManagerClass = require('./modules/chatmanager');
 const ChatManager = new ChatManagerClass("http://localhost:8000");
+const {v4:uuidv4} = require('uuid');
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+function activateUser(user){
+  ChatManager.setActiveUser(global.user.id);
+  CourseManager.setActiveUser(global.user.id);
+}
+activateUser(global.user);
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -90,16 +100,25 @@ ipcMain.handle('chat-file-upload',(e,{files,immediate})=>ChatManager.uploadFile(
 ipcMain.handle('chat-file-delete',(e,{ids,types})=>ChatManager.deleteFile(ids,types));
 ipcMain.handle('delete-session',(e,{userId,courseId,topicId})=>ChatManager.deleteSession(userId,courseId,topicId));
 
+ipcMain.handle('get-upcoming-event',(e,{userId,fromDateISO,maxInstances})=>EventManager.getUpcomingEvents(userId,fromDateISO,maxInstances));
 ipcMain.handle('create-event',(e,{userId,eventData})=>EventManager.createEventForUser(userId,eventData));
 ipcMain.handle('delete-event',(e,{userId,eventId})=>EventManager.deleteEvent(userId,eventId));
 ipcMain.handle('delete-instance',(e,{userId,eventId,startTime})=>EventManager.deleteSingleInstanceSmart(userId,eventId,startTime));
 ipcMain.handle('delete-future-instance',(e,{userId,eventId,startTime})=>EventManager.deleteFutureInstanceSmart(userId,eventId,startTime));
 ipcMain.handle('update-instance-continue',(e,{userId, eventId, startTime, shouldContinue})=>EventManager.updateInstanceContinue(userId, eventId, startTime, shouldContinue));
 ipcMain.handle('get-month-event',(e,{userId,year,month})=> EventManager.getEventsForMonth(userId,year,month));
-ipcMain.handle('export-user-db', (event, {userId}) => {
+ipcMain.handle('export-user-db', (e, {userId}) => {
     const dbBuffer = EventManager.getUserDatabaseFile(userId);
     if (!dbBuffer) {
       throw new Error('Database not found');
     }
     ChatManager.exportDB(userId,dbBuffer);
+});
+
+ipcMain.handle('get-userdata',()=>{
+  return global.user;
+});
+ipcMain.handle('set-userdata',(e,{newUser})=>{
+  global.user={...global.user,...newUser};
+  activateUser(global.user);
 });

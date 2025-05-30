@@ -6,10 +6,11 @@ const cancelBtn = document.getElementById("cancelCourse");
 const titleInput = document.getElementById("courseTitle");
 const descInput = document.getElementById("courseDesc");
 const boxContainer = document.querySelector(".box-container");
-const userId='testuser';
+let user = {};
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadCourses()
+document.addEventListener('DOMContentLoaded', async () => {
+    user = await window.userAPI.getUser();
+    loadCourses();
 });
 // Show form on "Add Course"
 addCourseBtn.addEventListener("click", () => {
@@ -32,7 +33,7 @@ function openCourse(courseId) {
 function removeCourse(courseId){
   window.courseAPI.deleteCourse(courseId);
   try{
-    window.chatAPI.deleteSession(userId,courseId);
+    window.chatAPI.deleteSession(user.id,courseId);
 
   }catch(error){
     console.log(error);

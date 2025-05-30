@@ -3,15 +3,12 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config');
 const { v4: uuidv4 } = require('uuid');
-const userid = 'testuser'
 const USER_DIR = config.USER_DIR;
 const CHAT_FILE = 'chat_history.json';
 
 class ChatManager{
     constructor(server_address){
         this.server_address = server_address;
-        this.local_storage = path.join(USER_DIR,userid);
-        this.course_dir =path.join(this.local_storage,'courses');
     }
 
     setActiveUser(userId){

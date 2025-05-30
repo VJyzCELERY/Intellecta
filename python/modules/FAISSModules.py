@@ -24,7 +24,7 @@ class FileClass(BaseModel):
 class BaseFaissManager:
     def __init__(self, embedding_model: SentenceTransformer,session_id = "General", index_path="faiss.index", dimension = config.FAISS_DIM):
         
-        self.session_folder = os.path.join(config.INDEX_BASE_FOLDER,session_id)
+        self.session_folder = os.path.join('userdata',session_id,config.INDEX_BASE_FOLDER)
         os.makedirs(self.session_folder, exist_ok=True)
         self.index_path = os.path.join(self.session_folder,index_path)
         self.metadata_path = os.path.join(self.session_folder, f"{index_path}-metadata.json")

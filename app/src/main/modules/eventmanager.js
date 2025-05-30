@@ -4,7 +4,6 @@ const path = require('path');
 const { parseISO, formatISO, addDays, addWeeks, addMonths, addYears } = require('date-fns');
 const Database = require('better-sqlite3');
 const config = require('./config');
-const userid = 'testuser'
 const SCHEDULE_DIR = config.USER_DIR;
 
 
@@ -30,7 +29,7 @@ const SCHEDULE_DIR = config.USER_DIR;
     // If continue=true, generates next year chunk automatically
   ]
 }
- */
+*/
 
 class EventManager{
     getUserDir(userId) {
@@ -284,6 +283,50 @@ class EventManager{
         `);
         update.run(shouldContinue === true ? 1 : (shouldContinue === false ? 0 : null), eventId, startTime);
         return { success: true };
+    }
+    getUpcomingEvents(userId, fromDateISO, maxInstances = 10) {
+        const db = this.getUserScheduleDB(userId);
+
+        const stmt = db.prepare(`
+            SELECT 
+                e.event_id, 
+                e.title, 
+                e.description, 
+                e.repeat,
+                d.start, 
+                d.end, 
+                d.continue
+            FROM EVENT_DETAILS d
+            JOIN EVENT e ON d.event_id = e.event_id
+            WHERE d.end >= ?
+            ORDER BY d.start ASC
+            LIMIT ?
+        `);
+
+        const rows = stmt.all(fromDateISO, maxInstances);
+
+        // Optionally: generate more instances if approaching limit of existing repeats
+        const lastRow = rows[rows.length - 1];
+        const eventsNeedingGeneration = new Set();
+
+        if (lastRow && lastRow.repeat) {
+            const repeat = JSON.parse(lastRow.repeat);
+            if (!repeat.until && lastRow.continue === 1) {
+                eventsNeedingGeneration.add(lastRow.event_id);
+            }
+        }
+
+        // Generate more if necessary
+        for (const eventId of eventsNeedingGeneration) {
+            this.generateNextYearChunk(userId, eventId);
+        }
+
+        // Re-query if more were generated
+        if (eventsNeedingGeneration.size > 0) {
+            return this.getUpcomingEvents(userId, fromDateISO, maxInstances);
+        }
+
+        return rows;
     }
 
     getEventsForMonth(userId, year, month) {

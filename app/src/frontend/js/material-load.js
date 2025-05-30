@@ -6,12 +6,14 @@ let currentTopicId = null;
 let currentDocument = null;
 let documentToEdit = null;
 let topicToEdit=null;
-const userId = 'testuser';
+let user={};
 const editor = document.getElementById('content-editor');
 
 
-document.addEventListener('DOMContentLoaded',()=>{
-  console.log('Loaded course with id : ',courseId)
+
+document.addEventListener('DOMContentLoaded',async ()=>{
+  user = await window.userAPI.getUser();
+  console.log('Loaded course with id : ',courseId);
   loadCourse();
 })
 
@@ -302,12 +304,12 @@ async function loadTopic(topicId) {
   currentTopicId=topicId;
   li.className='topic-item active'
   try{
-    await loadChatSession(userId,courseId,currentTopicId);
+    await loadChatSession(user.id,courseId,currentTopicId);
   }catch(error){
     console.log(error);
   }
-  console.log(userId,courseId,currentTopicId);
-  loadChat(userId,courseId,currentTopicId);
+  console.log(user.id,courseId,currentTopicId);
+  loadChat(user.id,courseId,currentTopicId);
   await loadDocuments(topicId);
 }
 
@@ -338,7 +340,7 @@ async function deleteTopic(topicId){
   
   try{
     console.log("Attempt Delete");
-    window.chatAPI.deleteSession(userId,courseId,topicId);
+    window.chatAPI.deleteSession(user.id,courseId,topicId);
   }catch(error){
     console.log(error);
   }

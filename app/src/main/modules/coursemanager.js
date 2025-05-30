@@ -3,15 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config');
 const { v4: uuidv4 } = require('uuid');
-const userid = 'testuser'
 const USER_DIR = config.USER_DIR;
 
 class CourseManager {
-  constructor(){
-    this.course_dir =path.join(USER_DIR,userid,'courses');
-  }
-
   setActiveUser(userId){
+    global.user.id = userId;
     this.course_dir = path.join(USER_DIR,userId,'courses');
   }
 

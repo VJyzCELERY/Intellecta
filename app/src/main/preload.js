@@ -137,4 +137,10 @@ contextBridge.exposeInMainWorld('eventAPI',{
   updateInstanceContinue: (userId, eventId, startTime, shouldContinue)=> ipcRenderer.invoke('update-instance-continue',{userId, eventId, startTime, shouldContinue}),
   getMonthEvent: (userId,year,month) => ipcRenderer.invoke('get-month-event',{userId,year,month}),
   exportDB : async (userId) => {return await ipcRenderer.invoke('export-user-db',{userId})},
+  getUpcomingEvent: (userId,fromDateISO,maxInstances=10) => ipcRenderer.invoke('get-upcoming-event',{userId,fromDateISO,maxInstances}),
 });
+
+contextBridge.exposeInMainWorld('userAPI',{
+  getUser:async ()=>{return await ipcRenderer.invoke('get-userdata')},
+  setUser:(newUser)=>ipcRenderer.invoke('set-userdata',{newUser}),
+})

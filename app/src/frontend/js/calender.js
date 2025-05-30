@@ -10,7 +10,25 @@ const submitEvent = document.getElementById('submitEvent');
 let currentDate = new Date();
 let eventsList = [];
 let currentActivatedDate = null;
-const userId='testuser';
+let user={};
+document.addEventListener('DOMContentLoaded', async () =>{ 
+    user = await window.userAPI.getUser();
+    renderCalendar();
+    displayEvents(null);
+    loadChat(user.id,'..','schedule');
+    try{
+        window.chatAPI.loadSession(user.id,'schedule','');
+
+    }catch(error){
+        console.log('Failed to connect to server : ',error);
+    }
+    currentCourse='schedule';
+    mode='schedule'
+    const chatuploadbutton = document.getElementById('chat-file-upload-btn');
+    if (chatuploadbutton) {
+        chatuploadbutton.remove();
+    }
+});
 
 
 async function renderCalendar() {
@@ -152,8 +170,8 @@ function convertToISO(date, time) {
 }
 
 async function updateEventList(){
-    console.log(userId,currentDate.getFullYear(),currentDate.getMonth()+1);
-    eventsList = await window.eventAPI.getMonthEvent(userId,currentDate.getFullYear(),currentDate.getMonth()+1);
+    console.log(user.id,currentDate.getFullYear(),currentDate.getMonth()+1);
+    eventsList = await window.eventAPI.getMonthEvent(user.id,currentDate.getFullYear(),currentDate.getMonth()+1);
     console.log(eventsList);
 }
 
@@ -243,8 +261,8 @@ async function createEventSchedule(){
         ]
     }
 
-    await window.eventAPI.createEvent(userId,event_data);
-    window.eventAPI.exportDB(userId);
+    await window.eventAPI.createEvent(user.id,event_data);
+    window.eventAPI.exportDB(user.id);
     renderCalendar();
     closeInputModal();
     
@@ -257,6 +275,7 @@ function displayEvents(dateStr) {
     }
 
     const eventData = getEventsForDate(dateStr);
+    console.log(eventData);
     if (eventData.length === 0) {
         eventList.innerHTML = `<p>No events on ${dateStr}.</p>`;
         return;
@@ -345,29 +364,29 @@ function showEventDetailModal(){
 }
 
 async function deleteSingleInstance(eventId,startTime){
-    await window.eventAPI.deleteInstance(userId,eventId,startTime);
+    await window.eventAPI.deleteInstance(user.id,eventId,startTime);
     renderCalendar();
     closeEventDetailModal();
     await updateEventList();
-    window.eventAPI.exportDB(userId);
+    window.eventAPI.exportDB(user.id);
     displayEvents(currentActivatedDate);
 }
 
 async function deleteFutureInstance(eventId,startTime){
-    await window.eventAPI.deleteUpcomingInstance(userId,eventId,startTime);
+    await window.eventAPI.deleteUpcomingInstance(user.id,eventId,startTime);
     renderCalendar();
     closeEventDetailModal();
     await updateEventList();
-    window.eventAPI.exportDB(userId);
+    window.eventAPI.exportDB(user.id);
     displayEvents(currentActivatedDate);
 }
 
 async function deleteEvent(eventId){
-    await window.eventAPI.deleteEvent(userId,eventId);
+    await window.eventAPI.deleteEvent(user.id,eventId);
     renderCalendar();
     closeEventDetailModal();
     await updateEventList();
-    window.eventAPI.exportDB(userId);
+    window.eventAPI.exportDB(user.id);
     displayEvents(currentActivatedDate);
 }
 
@@ -396,21 +415,7 @@ function toggleRepeatDetailView(){
     }
 }
 
-renderCalendar();
-displayEvents(null);
 
 
-document.addEventListener('DOMContentLoaded', function() { 
-    try{
-        window.chatAPI.loadSession(userId,'schedule','');
 
-    }catch(error){
-        console.log('Failed to connect to server : ',error);
-    }
-    currentCourse='schedule';
-    mode='schedule'
-    const chatuploadbutton = document.getElementById('chat-file-upload-btn');
-    if (chatuploadbutton) {
-        chatuploadbutton.remove();
-    }
-});
+
