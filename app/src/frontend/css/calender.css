@@ -26,16 +26,28 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--fullwhite);
   padding: 20px;
   border-radius: 10px;
   width: 400px;
 }
 
-
 .event-repeat-detail{
     display:none;
     flex-direction:column;
+}
+
+.event-repeat-detail select {
+    padding: 12px;
+    border: 1px solid none;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.event-repeat-detail select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(45, 51, 107, 0.2);
 }
 
 .calendar-container {
@@ -203,7 +215,7 @@
 
 .event-form input {
     padding: 12px;
-    border: 1px solid var();
+    border: 1px solid none;
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.3s ease;
