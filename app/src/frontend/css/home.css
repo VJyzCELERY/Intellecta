@@ -62,9 +62,10 @@
     background: linear-gradient(135deg, #b28ed9, #4a5384);
 }
 
+/* SCHEDULE PANEL  */
 .schedule-panel {
     order: 2;
-    min-width: 10rem;
+    /* width: calc(25rem); */
     background: var(--fullwhite);
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -76,29 +77,70 @@
     border-left: 2px solid #ccc;
 }
 
-.calendar {
-    background: white;
-    padding: 1rem;
-    border-radius: 10px;
-    margin-bottom: 2rem;
+.schedule-panel h2{
+    color: var(--light-black);
+    font-weight: 650;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
 }
 
-.sessions {
+/* box for panel  */
+.session-box {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
+.session-box h3 {
+    color: var(--light-black);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.68rem;
+    height: 35vh;
+    overflow-y: auto;
+}
+
+/* card list  */
 .session-card {
-    background: white;
+    background: var(--fullwhite);
     padding: 0.8rem;
-    border-left: 5px solid #ccc;
     border-radius: 8px;
     transition: background 0.3s;
+    animation: fadeInUp 0.5s ease forwards;
+    animation-delay: 0.2s;
+}
+
+.today {
+    border-left: 5px solid var(--green);
+}
+
+.upcoming {
+    border-left: 5px solid var(--blue3);
 }
 
 .session-card:hover {
     background: #f0f0f0;
+}
+
+.session-card .title{
+    color: black;
+    font-size: 1rem;
+    font-weight: 600;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid black;
+}
+
+.session-card .desc{
+    color: var(--light-black);
+    font-size: 1rem;
+    font-weight: 400;
+    margin-top: 0.35rem;
 }
 
 /* Responsive */

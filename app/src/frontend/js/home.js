@@ -39,25 +39,44 @@ async function getEventsForDate(selectedDate) {
 }
 
 // Sessions Logic
-const sessionList = document.getElementById('sessionList');
+const todayList = document.getElementById('todayList');
 
-const scheduleData = [
-    { subject: "Discrete Math", time: "09:00 AM – 11:00 AM", type: "discrete" },
-    { subject: "Biology", time: "13:00 PM – 14:00 PM", type: "bio" },
-    { subject: "Physics", time: "16:00 PM – 17:00 PM", type: "physics" },
+const todayData = [
+    { title: "A", start: "09:00 AM", end: "11:00 AM"},
+    { title: "B", start: "09:00 AM", end: "11:00 AM"},
+    { title: "C", start: "09:00 AM", end: "11:00 AM"},
+    { title: "D", start: "09:00 AM", end: "11:00 AM"},
+    { title: "E", start: "09:00 AM", end: "11:00 AM"}
 ];
 
-const randomColor = () => {
-    const colors = ["#f87171", "#34d399", "#60a5fa", "#fbbf24", "#a78bfa", "#fb7185"];
-    return colors[Math.floor(Math.random() * colors.length)];
-};
-
-scheduleData.forEach((item, index) => {
+todayData.forEach((item) => {
     const div = document.createElement('div');
-    div.className = 'session-card';
-    div.style.borderLeft = `5px solid ${randomColor()}`;
-    div.style.animation = `fadeInUp 0.5s ease forwards`;
-    div.style.animationDelay = `${index * 0.2 + 0.2}s`;
-    div.innerHTML = `${item.subject}<br><small>${item.time}</small>`;
+    div.className = 'session-card today';
+    div.innerHTML = `<div class="session-card today">
+                        <p class="title">${item.title}</p>
+                        <p class="desc">Start : <b>${item.start}</b></p>
+                        <p class="desc">End : <b>${item.end}</b></p>
+                    </div>`;
+    sessionList.appendChild(div);
+});
+
+const upcomingList = document.getElementById('upcomingList');
+
+const upcomingData = [
+    { title: "A", dateStart: "09:00 AM", dateEnd: "11:00 AM"},
+    { title: "B", dateStart: "09:00 AM", dateEnd: "11:00 AM"},
+    { title: "C", dateStart: "09:00 AM", dateEnd: "11:00 AM"},
+    { title: "D", dateStart: "09:00 AM", dateEnd: "11:00 AM"},
+    { title: "E", dateStart: "09:00 AM", dateEnd: "11:00 AM"}
+];
+
+upcomingData.forEach((item) => {
+    const div = document.createElement('div');
+    div.className = 'session-card upcoming';
+    div.innerHTML = `<div class="session-card today">
+                        <p class="title">${item.title}</p>
+                        <p class="desc">Start : <b>${item.dateStart}</b></p>
+                        <p class="desc">End : <b>${item.dateEnd}</b></p>
+                    </div>`;
     sessionList.appendChild(div);
 });
