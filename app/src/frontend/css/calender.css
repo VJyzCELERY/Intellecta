@@ -8,6 +8,7 @@
     transition: margin-left 0.4s ease;
 }
 
+/* MODAL  */
 .modal {
   position: fixed;
   top: 0;
@@ -30,6 +31,96 @@
   padding: 20px;
   border-radius: 10px;
   width: 400px;
+}
+
+/* MODAL EVENT DETAIL  */
+.modal-content .header{
+    display: flex;
+}
+
+.modal-content .header h3{
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--blue2);
+    margin-bottom: 0.5rem;
+}
+
+.modal-content .header span{
+    font-size: 2rem;
+    margin-left: auto;
+    cursor: pointer;
+}
+
+.line {
+    border-bottom: 1px solid black;
+    width: 100%;
+}
+
+#modalEventDetails .description{
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    word-wrap: break-word;
+}
+
+.modal-actions {
+    display: flex;
+    margin-top: 1rem;
+}
+
+.modal-actions button{
+    margin-left: auto;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    background-color: var(--red);
+    font-weight: 550;
+    color: var(--white);
+    transition: 0.25s ease-in-out;
+}
+
+.modal-actions button:hover{
+    background-color: var(--red2);
+}
+
+#deleteModal .description{
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+#deleteModal button {
+    padding: 0.5rem 1rem 0.65rem 1rem;
+    width: fit-content;
+    text-align: left;
+    border: none;
+    background-color: var(--blue3);
+    color: var(--white);
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: 0.2s ease-in-out;
+}
+
+#deleteModal button:hover {
+    background-color: var(--blue);
+}
+
+#deleteModal .cancel-btn {
+    display: flex;
+}
+
+#deleteModal .cancel-btn button{
+    margin-left: auto;
+    background-color: var(--red);
+    transition: 0.2s ease-in-out;
+}
+
+#deleteModal .cancel-btn button:hover{
+    background-color: var(--red2);
 }
 
 .event-repeat-detail{
@@ -90,6 +181,19 @@
     transform: scale(1.05);
 }
 
+.days-label {
+    font: medium;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    gap: 0.68rem;
+}
+
+.days-label > div {
+    text-align: center;
+    padding: 0 5px; /* Optional: Add spacing if needed */
+}
+
 .calendar-grid {
     font-size: medium;
     display: grid;
@@ -143,19 +247,19 @@
 .add-event-btn {
     margin-top: 2rem;
     background: var(--blue);
-    color: white;
+    color: var(--fullwhite);
     border: none;
     padding: 1rem 1rem;
     border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     margin-left: 0rem;
+    font-weight: 600;
 }
 
 .add-event-btn:hover {
     color: var(--blue);
     background: var(--fullwhite);
-    border: 0.1rem solid var(--blue);
 }
 
 #eventList {

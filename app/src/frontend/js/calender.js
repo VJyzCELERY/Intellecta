@@ -337,11 +337,17 @@ async function viewEventDetail(eventId, startTime) {
     const time2 = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
     const modalContent = `
-        <h3>${matched.title}</h3>
-        <p><strong>Start:</strong> ${startDateStr} ${time1}</p>
-        <p><strong>End:</strong> ${endDateStr} ${time2}</p>
-        <p><strong>Description:</strong><br>${matched.description || 'No description.'}</p>
-
+        <div class="header">
+            <h3>${matched.title}</h3>
+            <span class="close-btn" onclick="closeEventDetailModal()">&times;</span>
+        </div>
+        <div class="line"></div>
+        <div class="description">
+            <p><strong>Start:</strong> ${startDateStr} ${time1}</p>
+            <p><strong>End:</strong> ${endDateStr} ${time2}</p>
+            <p><strong>Description:</strong><br>${matched.description || 'No description.'}</p>
+        </div>
+        
         <div class="modal-actions">
             <button id="deleteEventBtn" onclick="showDeleteEventModal()">Delete</button>
         </div>

@@ -77,6 +77,15 @@
           <h3 id="monthYear"></h3>
           <button id="nextMonth">&gt;</button>
         </div>
+        <div class="days-label">
+          <p>Sun</p>
+          <p>Mon</p>
+          <p>Tue</p>
+          <p>Wed</p>
+          <p>Thu</p>
+          <p>Fri</p>
+          <p>Sat</p>
+        </div>
         <div class="calendar-grid" id="calendarGrid"></div>
       </div>
       <!-- Add AI toggle button -->
@@ -90,19 +99,28 @@
     <!-- Event detail modal -->
     <div id="eventDetailModal" class="modal hidden">
       <div class="modal-content">
-        <span class="close-btn" onclick="closeEventDetailModal()">&times;</span>
+        <!-- <span class="close-btn" onclick="closeEventDetailModal()">&times;</span> -->
         <div id="modalEventDetails"></div>
       </div>
     </div>
     <!-- Delete event modal-->
      <div id="deleteModal" class="modal hidden">
       <div class="modal-content">
-        <h3>Delete Event</h3>
-        <p>Choose how to delete the event:</p>
-        <button id="deleteInstance">Delete This Instance</button>
-        <button id="deleteFuture">Delete This Instance and Upcoming Instances</button>
-        <button id="deleteAll">Delete Entire Event</button>
-        <button class="close-btn" onclick="closeDeleteEventModal()">Cancel</button>
+        <div class="header">
+          <h3>Delete Event</h3>
+          <span onclick="closeEventDetailModal()">&times;</span>
+        </div>
+        <div class="line"></div>
+        <div class="description">
+          <p>Choose how to delete the event:</p>
+          <button id="deleteInstance">Delete This Instance</button>
+          <button id="deleteFuture">Delete This Instance and Upcoming Instances</button>
+          <button id="deleteAll">Delete Entire Event</button> 
+        </div>
+        <div class="cancel-btn">
+          <button onclick="closeDeleteEventModal()">Cancel</button>
+        </div>
+        
       </div>
     </div>
     <!-- Event Form (Initially Hidden) -->
