@@ -41,6 +41,7 @@ function removeCourse(courseId){
 }
 
 function loadCourses() {
+  
   window.courseAPI.getCourses().then(courses => {
     boxContainer.innerHTML = '';
 

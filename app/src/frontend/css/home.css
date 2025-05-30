@@ -42,7 +42,16 @@
 
 .row {
     display: flex;
+    flex-wrap: wrap;
     gap: 1.5rem;
+    width: 100%;
+    justify-content: center; 
+}
+
+.row > * {
+  flex: 1 1 calc((100% - 3rem) / 3);
+  box-sizing: border-box;
+  
 }
 
 .upload-btn,
@@ -52,12 +61,15 @@
 }
 
 .quick-access .card {
-    flex: 1;
+    flex: 0 0 calc((100% - 3rem) / 3); /* exactly 3 per row, accounting for gap */
     background: linear-gradient(135deg, #a8e0c4, #4a6584);
     color: white;
     text-align: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    border-radius: 6px;
+    
 }
-
 .quick-access .card:nth-child(2) {
     background: linear-gradient(135deg, #b28ed9, #4a5384);
 }
