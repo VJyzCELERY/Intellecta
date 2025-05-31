@@ -1,0 +1,31 @@
+name: Intellecta
+channels:
+  - conda-forge
+  - pytorch
+  - esri
+  - defaults
+dependencies:
+  - python=3.12.9
+  - pip
+  - numpy=2.1.1
+  - pillow=11.1.0
+  - scipy=1.15.2
+  - scikit-learn=1.6.1
+  - pandas=2.2.2
+  - sqlite
+  - pip:
+    - fastapi==0.115.12
+    - uvicorn==0.34.0
+    - pydantic==2.10.6
+    - python-multipart==0.0.20
+    - python-dateutil>=2.8.0
+    - llama-cpp-python==0.3.7
+    - paddleocr==2.10.0
+    - paddlepaddle==3.0.0
+    - ultralytics==8.3.98
+    - faiss-cpu==1.10.0
+    - sentence-transformers==3.4.1
+    - pypdf==5.4.0
+    - python-docx==1.1.2
+    - langchain==0.3.21
+    - openai-whisper==20240930
