@@ -1,3 +1,4 @@
+
 /*main content*/
 .main-content {
     flex: 1;
@@ -9,28 +10,97 @@
     overflow-y: auto;
 }
 
-.card {
+#Greeting {
+    color: var(--blue);
+}
+
+.card-head{
     background: var(--fullwhite);
+    border-top: 3px solid #6e8efb;
+    border-bottom: 3px solid #a777e3;
+    border-left: 3px solid #4e54c8;
+    border-right: 3px solid #4e54c8;
+    color: var(--black);
+    /* color: var(--white); */
     padding: 1.5rem;
     border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s forwards;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-head em{
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.card-head h3{
+    color: var(--blue);
+    margin-top: 0.3rem;
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-head small{
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.card-head #clock{
+    margin-top: 3rem;
+    color: var(--blue);
+    font-size: 4rem;
+    margin-left: auto;
+}
+
+.card {
+    /* background: var(--fullwhite); */
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 
+        0 3px 10px rgba(78, 84, 200, 0.08), 
+        0 1px 2px rgba(0,0,0,0.05);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     opacity: 0;
     transform: translateY(20px);
     animation: fadeInUp 0.6s forwards;
-    cursor: pointer;
+    text-decoration: none;
 }
 
-.card .text {
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
+    transform: translateX(-100%);
+    z-index: -1;
+}
+
+.card:hover::before {
+    transform: translateX(100%);
+}
+
+.card .text{
     align-items: center;
-    color: #000;
+    color: #f8f9fe;
     font-size: 1.5rem;
+    font-weight: 500;
     text-decoration: none;
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 
+        0 15px 30px rgba(78, 84, 200, 0.2), 
+        0 5px 15px rgba(0,0,0,0.1);
 }
 
 @keyframes fadeInUp {
@@ -54,21 +124,23 @@
   
 }
 
-.upload-btn,
-.stt-btn {
-    flex: 1;
-    cursor: pointer;
+.quick-access h3{
+    color: var(--blue);
+    margin-bottom: 1rem;
 }
 
 .quick-access .card {
     flex: 0 0 calc((100% - 3rem) / 3); /* exactly 3 per row, accounting for gap */
-    background: linear-gradient(135deg, #a8e0c4, #4a6584);
-    color: white;
+    background: var(--fullwhite);
+    border-bottom: 2px solid #6e8efb;
+    color: var(--blue);
+    font-weight: 600;
     text-align: center;
     padding: 1rem;
     box-sizing: border-box;
     border-radius: 6px;
-    
+    cursor: pointer;
+    font-size: 1.3rem;
 }
 .quick-access .card:nth-child(2) {
     background: linear-gradient(135deg, #b28ed9, #4a5384);
@@ -85,12 +157,13 @@
     display: flex;
     flex-direction: column;
     padding: 2rem;
-    background: #ede6fa;
+    background: #dbeaff;
+    /* background: #f8f9fe; */
     border-left: 2px solid #ccc;
 }
 
 .schedule-panel h2{
-    color: var(--light-black);
+    color: var(--blue);
     font-weight: 650;
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
@@ -104,6 +177,7 @@
 }
 
 .session-box h3 {
+    color: var(--blue);
     color: var(--light-black);
     margin-bottom: 0.5rem;
     font-size: 1.1rem;
@@ -136,9 +210,9 @@
     border-left: 5px solid var(--blue3);
 }
 
-.session-card:hover {
+/* .session-card:hover {
     background: #f0f0f0;
-}
+} */
 
 .session-card .title{
     color: black;
