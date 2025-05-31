@@ -51,11 +51,6 @@
     cursor: pointer;
 }
 
-.line {
-    border-bottom: 1px solid black;
-    width: 100%;
-}
-
 #modalEventDetails .description{
     margin-top: 0.5rem;
     display: flex;
@@ -225,8 +220,8 @@
 }
 
 .calendar-grid div.active_date {
-    background: var(--orange) !important;
-    border-color: var(--orange) !important;
+    background: var(--blue2) !important;
+    color: var(--white) !important;
 }
 
 .calendar-grid div:hover {
