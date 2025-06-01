@@ -5,34 +5,130 @@ global.user = {
 const { app, BrowserWindow, ipcMain,dialog} = require('electron');
 const path = require('node:path');
 const fs = require('fs');
+const { spawn,execFile  } = require('child_process');
 const EventManagerClass = require('./modules/eventmanager');
 const EventManager = new EventManagerClass();
 const CourseManagerClass = require('./modules/coursemanager');
 const CourseManager = new CourseManagerClass();
 const ChatManagerClass = require('./modules/chatmanager');
 const ChatManager = new ChatManagerClass("http://localhost:8000");
-const {v4:uuidv4} = require('uuid');
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
+let llmProcess = null;
+const isDev = !app.isPackaged;
+const resourcePath = app.isPackaged
+  ? process.resourcesPath
+  : path.join(__dirname, '../../');
+
+const pythonPath = path.join(resourcePath, 'python');
+const pythonScriptPath = path.join(resourcePath, 'main.py');
+
+const pythonExecutable = process.platform === 'win32'
+  ? path.join(pythonPath, 'python.exe')
+  : path.join(pythonPath, 'python');
+
+console.log('Resource paths:', {
+  resourcePath,
+  pythonPath,
+  pythonScriptPath,
+  pythonExecutable,
+  isDev,
+  execPath: process.execPath
+});
 
 function activateUser(user){
-  ChatManager.setActiveUser(global.user.id);
-  CourseManager.setActiveUser(global.user.id);
+  ChatManager.setActiveUser(user.id);
+  CourseManager.setActiveUser(user.id);
 }
 activateUser(global.user);
+
+function serverHealthCheck(){
+  return ChatManager.waitForHealthCheck();
+}
+
+function startLLMServer() {
+  console.log('Starting LLM server...');
+  
+  // Check if Python executable exists
+  if (!fs.existsSync(pythonExecutable)) {
+    console.error('Python executable not found at:', pythonExecutable);
+    dialog.showErrorBox('Python Error', `Python executable not found at: ${pythonExecutable}`);
+    app.quit();
+    return;
+  }
+
+  // Check if Python script exists
+  if (!fs.existsSync(pythonScriptPath)) {
+    console.error('Python script not found at:', pythonScriptPath);
+    dialog.showErrorBox('Script Error', `Python script not found at: ${pythonScriptPath}`);
+    app.quit();
+    return;
+  }
+  try {
+    console.log('Spawning : ',pythonExecutable, [pythonScriptPath]);
+    llmProcess = execFile(pythonExecutable, [pythonScriptPath], {
+      cwd: resourcePath, // Set working directory
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+
+    llmProcess.stdout.on('data', (data) => {
+      console.log(`[Python stdout] ${data.toString()}`);
+    });
+
+    llmProcess.stderr.on('data', (data) => {
+      console.error(`[Python stderr] ${data.toString()}`);
+    });
+
+    llmProcess.on('error', (error) => {
+      console.error('Failed to start Python process:', error);
+      dialog.showErrorBox('Process Error', `Failed to start Python process: ${error.message}`);
+      app.quit();
+    });
+
+    llmProcess.on('exit', (code, signal) => {
+      console.warn(`Python process exited with code ${code}, signal ${signal}`);
+      if (code !== 0 && code !== null) {
+        dialog.showErrorBox('Python Process Error', `Python process exited unexpectedly with code ${code}`);
+      }
+    });
+
+    // Wait for server health before opening window
+    console.log('Waiting for server health check...');
+    serverHealthCheck()
+      .then(() => {
+        console.log('Server health check passed, creating window...');
+        createWindow();
+      })
+      .catch((err) => {
+        console.error('Server health check failed:', err);
+        dialog.showErrorBox('Server Error', `Server health check failed: ${err.message}`);
+        app.quit();
+      });
+  } catch (error) {
+    console.error('Error starting LLM server:', error);
+    dialog.showErrorBox('Startup Error', `Failed to start LLM server: ${error.message}`);
+    app.quit();
+  }
+}
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1400,
+    height: 900,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
+      webSecurity: true,
       nodeIntegration: false,
-      sandbox: false
-    },
+      sandbox: false,
+      zoomFactor: 1.0,
+      deviceScaleFactor: 1.0
+    }
   });
 
   // and load the index.html of the app.
@@ -40,21 +136,39 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+
+  mainWindow.webContents.on('context-menu', (e) => {
+    e.preventDefault(); // Disable right-click context menu
+  });
+
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (
+      input.control && input.shift && input.key.toLowerCase() === 'i' || // Ctrl+Shift+I
+      input.key === 'F12'                                               // F12
+    ) {
+      event.preventDefault(); // Disable DevTools shortcuts
+    }
+  });
 };
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  createWindow();
-
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
+  if(isDev){
+    startLLMServer();
+    
+    // // On OS X it's common to re-create a window in the app when the
+    // // dock icon is clicked and there are no other windows open.
+    // app.on('activate', () => {
+    //   if (BrowserWindow.getAllWindows().length === 0) {
+    //     createWindow();
+    //   }
+    // });
+  }else{
+    startLLMServer();
+  }
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -64,6 +178,10 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('will-quit', () => {
+  if (llmProcess) llmProcess.kill();
 });
 
 // In this file you can include the rest of your app's specific main process

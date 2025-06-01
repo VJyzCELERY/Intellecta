@@ -1,4 +1,4 @@
-name: Intellecta
+name: IntellPython
 channels:
   - conda-forge
   - pytorch

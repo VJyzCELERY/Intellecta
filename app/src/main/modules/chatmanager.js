@@ -5,6 +5,7 @@ const config = require('./config');
 const { v4: uuidv4 } = require('uuid');
 const USER_DIR = config.USER_DIR;
 const CHAT_FILE = 'chat_history.json';
+const http = require('http');
 
 class ChatManager{
     constructor(server_address){
@@ -24,6 +25,28 @@ class ChatManager{
             body: formData
         });
     
+    }
+
+    waitForHealthCheck(retries = 180, interval = 1000) {
+        return new Promise((resolve, reject) => {
+            const check = () => {
+            http.get(`${this.server_address}/health`, (res) => {
+                if (res.statusCode === 200) {
+                    resolve();
+                } else {
+                    retry();
+                }
+            }).on('error', retry);
+            };
+
+            const retry = () => {
+            if (retries <= 0) return reject(new Error('Python backend failed to start'));
+            retries--;
+            setTimeout(check, interval);
+            };
+
+            check();
+        });
     }
 
     async *sendRequest(prompt=" ",mode='chat'){
