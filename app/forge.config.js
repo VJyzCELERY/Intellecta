@@ -3,7 +3,22 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
   packagerConfig: {
-    asar: true,
+    extraResource: [
+      'models',
+      'python',
+      'modules',
+      'main.py'
+    ],
+    asar: {
+      unpack: '{models/**/*,python/**/*,modules/**/*,main.py}'
+    },
+    // Ignore large files during the initial copy to prevent ASAR issues
+    ignore: [
+      /\.gguf$/,  // Ignore .gguf files during ASAR packing
+      "^/python($|/)",
+      /\.py$/, 
+
+    ]
   },
   rebuildConfig: {},
   makers: [
