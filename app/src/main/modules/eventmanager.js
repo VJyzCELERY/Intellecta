@@ -74,48 +74,119 @@ class EventManager{
         if (!repeat) return results;
 
         const interval = repeat.interval || 1;
-        let currentStart = parseISO(first.start);
-        let currentEnd = parseISO(first.end);
 
-        // Calculate end date for this generation chunk
+        // Parse dates and calculate duration
+        const baseStart = parseISO(first.start);
+        const baseEnd = parseISO(first.end);
+        const durationMs = baseEnd - baseStart;
+
+        // Determine when to stop
         let endDate;
         if (generateUntil) {
             endDate = parseISO(generateUntil);
         } else if (repeat.until) {
             endDate = parseISO(repeat.until);
         } else {
-            // For indefinite repeats, generate 1 year at a time
-            endDate = addYears(currentStart, 1);
+            endDate = new Date(Date.UTC(
+                baseStart.getUTCFullYear() + 1,
+                baseStart.getUTCMonth(),
+                baseStart.getUTCDate(),
+                baseStart.getUTCHours(),
+                baseStart.getUTCMinutes(),
+                baseStart.getUTCSeconds(),
+                baseStart.getUTCMilliseconds()
+            ));
         }
 
-        const addFn = {
-            daily: addDays,
-            weekly: addWeeks,
-            monthly: addMonths,
-            yearly: addYears
-        }[repeat.type];
+        const addFnMap = {
+            daily: (date, days) => {
+                return new Date(Date.UTC(
+                    date.getUTCFullYear(),
+                    date.getUTCMonth(),
+                    date.getUTCDate() + days,
+                    date.getUTCHours(),
+                    date.getUTCMinutes(),
+                    date.getUTCSeconds(),
+                    date.getUTCMilliseconds()
+                ));
+            },
+            weekly: (date, weeks) => {
+                return addFnMap.daily(date, weeks * 7);  // Now this works
+            },
+            monthly: (date, months) => {
+                const year = date.getUTCFullYear();
+                const month = date.getUTCMonth();
+                const day = date.getUTCDate();
+
+                const result = new Date(Date.UTC(
+                    year,
+                    month + months,
+                    day,
+                    date.getUTCHours(),
+                    date.getUTCMinutes(),
+                    date.getUTCSeconds(),
+                    date.getUTCMilliseconds()
+                ));
+
+                // Handle end-of-month overflow
+                if (result.getUTCDate() < day) {
+                    result.setUTCDate(0);
+                }
+
+                return result;
+            },
+            yearly: (date, years) => {
+                const year = date.getUTCFullYear();
+                const month = date.getUTCMonth();
+                const day = date.getUTCDate();
+
+                const result = new Date(Date.UTC(
+                    year + years,
+                    month,
+                    day,
+                    date.getUTCHours(),
+                    date.getUTCMinutes(),
+                    date.getUTCSeconds(),
+                    date.getUTCMilliseconds()
+                ));
+
+                // Handle leap year (Feb 29 → Feb 28)
+                if (month === 1 && day === 29 && result.getUTCDate() !== 29) {
+                    result.setUTCDate(28);
+                }
+
+                return result;
+            }
+        };
+
+        // Now you can safely access the right function:
+        const addFn = addFnMap[repeat.type];
+
 
         if (!addFn) return results;
 
-        // Generate instances until we reach the end date
+        let iterations = 0;
         while (true) {
-            currentStart = addFn(currentStart, interval);
-            currentEnd = addFn(currentEnd, interval);
+            iterations++;
 
-            // Stop if the next instance would start after the end date
-            if (currentStart > endDate) break;
+            const instanceStart = addFn(baseStart, interval * iterations);
+            const instanceEnd = new Date(instanceStart.getTime() + durationMs);
 
-            const isLastInstance = addFn(currentStart, interval) > endDate;
-            
+            if (instanceStart > endDate) break;
+
+            const nextStart = addFn(baseStart, interval * (iterations + 1));
+            const isLastInstance = nextStart > endDate;
+
             results.push({
-                start: formatISO(currentStart),
-                end: formatISO(currentEnd),
-                continue: repeat.until ? null : (isLastInstance && !repeat.until ? true : null)
+                start: formatISO(instanceStart),
+                end: formatISO(instanceEnd),
+                continue: repeat.until ? null : (isLastInstance ? true : null)
             });
         }
 
         return results;
     }
+
 
     generateNextYearChunk(userId, eventId) {
         const db = this.getUserScheduleDB(userId);

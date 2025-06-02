@@ -223,7 +223,7 @@ async function createEventSchedule(){
             return;
         }
         else{
-            if(eventRepeatDateUntilInput.value == ""){
+            if(eventRepeatDateUntilInput.value === ''){
                 repeatUntil=null;
             }else{
                 repeatUntil = convertToISO(eventRepeatDateUntilInput.value,"23:59");
