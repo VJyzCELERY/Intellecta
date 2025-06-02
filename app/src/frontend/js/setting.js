@@ -34,7 +34,7 @@ function closeLogoutModal() {
 
 function handleConfirmLogout() {
     // Perform actual logout here
-    window.location.href = '../login/login.html';
+    window.location.href = './login.html';
 }
 
 // Modal event listeners

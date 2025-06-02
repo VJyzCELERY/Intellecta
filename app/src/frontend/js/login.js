@@ -25,7 +25,7 @@ async function validateLogin() {
             await window.userAPI.setUser({id:username,name:username})
             window.location.href = "./home.html";
         }else{
-            alert('Login failed');
+            error.textContent='Invalid username or password';
         }
     }
 }
@@ -46,8 +46,7 @@ async function validateRegister() {
     } else if (!validatePassword(password)) {
         error.textContent = 'Password must be at least 6 characters, with a number and a symbol.';
     } else {
-        error.textContent = '';
-        alert(await window.userAPI.register(email, username, contact, password));
+        error.textContent = await window.userAPI.register(email, username, contact, password);
         toggleForms();
     }
 }
