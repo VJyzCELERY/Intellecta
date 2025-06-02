@@ -12,20 +12,25 @@ function validatePassword(password) {
     return /(?=.*\d)(?=.*[!@#$%^&*])(?=.{6,})/.test(password);
 }
 
-function validateLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
+async function validateLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
     const error = document.getElementById('loginError');
 
-    if (!email || !password) {
-        error.textContent = 'All fields are required.';
+    if (!username || !password) {
+        error.textContent = 'Please input all the field.';
     } else {
-        error.textContent = '';
-        window.location.href = "../home/home.html"; // Redirect to home page on successful login
+        const success = await window.userAPI.login(username,password);
+        if(success){
+            await window.userAPI.setUser({id:username,name:username})
+            window.location.href = "./home.html";
+        }else{
+            alert('Login failed');
+        }
     }
 }
 
-function validateRegister() {
+async function validateRegister() {
     const email = document.getElementById('registerEmail').value.trim();
     const username = document.getElementById('registerUsername').value.trim();
     const contact = document.getElementById('registerContact').value.trim();
@@ -42,7 +47,8 @@ function validateRegister() {
         error.textContent = 'Password must be at least 6 characters, with a number and a symbol.';
     } else {
         error.textContent = '';
-        alert('Registration successful (example).');
+        alert(await window.userAPI.register(email, username, contact, password));
+        toggleForms();
     }
 }
 

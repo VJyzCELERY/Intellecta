@@ -132,10 +132,10 @@ const createWindow = () => {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, '../frontend/home.html'));
+  mainWindow.loadFile(path.join(__dirname, '../frontend/login.html'));
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
 
   mainWindow.webContents.on('context-menu', (e) => {
@@ -240,3 +240,33 @@ ipcMain.handle('set-userdata',(e,{newUser})=>{
   global.user={...global.user,...newUser};
   activateUser(global.user);
 });
+
+ipcMain.handle('register',async (e,{ email, username, contact, password })=>{
+  const response=await fetch(`${ChatManager.server_address}/register`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({ email, username, contact, password })
+  })
+  const data = await response.json();
+    if (response.ok) {
+    return 'Register Successful';
+  } else {
+    return `Register failed with error : ${data.detail}`;
+  }
+})
+
+ipcMain.handle('login',async (e,{username,password })=>{
+  const response = await fetch(`${ChatManager.server_address}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+  });
+  const data = await response.json();
+  if (data.success) {
+      console.log("Login success:", data.success);
+      return true;
+  } else {
+      console.log("Login failed:", data.message);
+      return false;
+  }
+})

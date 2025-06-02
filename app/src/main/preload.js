@@ -143,4 +143,6 @@ contextBridge.exposeInMainWorld('eventAPI',{
 contextBridge.exposeInMainWorld('userAPI',{
   getUser:async ()=>{return await ipcRenderer.invoke('get-userdata')},
   setUser:(newUser)=>ipcRenderer.invoke('set-userdata',{newUser}),
+  login:async (username,password)=>{return await ipcRenderer.invoke('login',{username,password})},
+  register:async (email, username, contact, password)=>{return await ipcRenderer.invoke('register',{email, username, contact, password})},
 })

@@ -33,7 +33,11 @@ const SCHEDULE_DIR = config.USER_DIR;
 
 class EventManager{
     getUserDir(userId) {
-        return path.join(SCHEDULE_DIR, userId);
+        const dir = path.join(SCHEDULE_DIR, userId);
+        if(!fs.existsSync(dir)){
+            fs.mkdirSync(dir);
+        }
+        return dir;
     }
     getUserDatabaseFile(userId) {
         const dbPath = path.join(this.getUserDir(userId), 'schedule.db');
@@ -286,6 +290,9 @@ class EventManager{
     }
     getUpcomingEvents(userId, fromDateISO, maxInstances = 10) {
         const db = this.getUserScheduleDB(userId);
+        if(db==null){
+            return null;
+        }
 
         const stmt = db.prepare(`
             SELECT 

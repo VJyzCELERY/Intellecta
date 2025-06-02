@@ -1,5 +1,5 @@
 from fastapi.responses import StreamingResponse
-from fastapi import FastAPI,UploadFile,File,BackgroundTasks,Request,Form
+from fastapi import FastAPI,UploadFile,File,BackgroundTasks,Request,Form,HTTPException
 from modules import config,LLMModules
 from modules.EmbeddingModules import EMBEDDING_MODEL,split_text
 from modules.WhisperModules import WhisperNoFFmpeg
@@ -9,9 +9,51 @@ from typing import List
 import os
 import shutil
 import uvicorn
+import hashlib
+import sqlite3
 import base64
 
 llm_manager = LLMModules.LLMManager(stt_model=WhisperNoFFmpeg(config.STT_MODEL),embedding_model=EMBEDDING_MODEL)
+
+userDB = 'users.db'
+
+def init_db():
+    with sqlite3.connect(userDB) as conn:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            username TEXT UNIQUE NOT NULL,
+            contact TEXT,
+            password TEXT NOT NULL
+        )
+        """)
+init_db()
+
+class UserRegister(BaseModel):
+    email: str
+    username: str
+    contact: str
+    password: str
+
+class User(BaseModel):
+    username: str
+    password: str
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def user_exists(username: str) -> bool:
+    with sqlite3.connect(userDB) as conn:
+        result = conn.execute("SELECT id FROM users WHERE username = ?", (username,))
+        return result.fetchone() is not None
+
+def get_user(username: str):
+    with sqlite3.connect(userDB) as conn:
+        result = conn.execute("SELECT username, password FROM users WHERE username = ?", (username,))
+        return result.fetchone()
+
+
 
 class FileUploadRequest(BaseModel):
     files:List[FileData]
@@ -21,6 +63,41 @@ app = FastAPI()
 UPLOAD_FOLDER =config.UPLOAD_FOLDER
 files_memory = []
 process_new_file = False
+
+@app.post("/register")
+def register(user: UserRegister):
+    with sqlite3.connect(userDB) as conn:
+        # Check if username or email already exists
+        existing = conn.execute(
+            "SELECT id FROM users WHERE username = ? OR email = ?",
+            (user.username, user.email)
+        ).fetchone()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username or email already exists.")
+        
+        hashed = hash_password(user.password)
+        conn.execute(
+            "INSERT INTO users (email, username, contact, password) VALUES (?, ?, ?, ?)",
+            (user.email, user.username, user.contact, hashed)
+        )
+    return {"message": "User registered successfully."}
+
+@app.post("/login")
+def login(user: User):
+    with sqlite3.connect(userDB) as conn:
+        result = conn.execute(
+            "SELECT password FROM users WHERE username = ?", (user.username,)
+        ).fetchone()
+        if not result:
+            return {"success": False, "message": "User not found"}
+
+        hashed_input = hash_password(user.password)
+        if hashed_input != result[0]:
+            return {"success": False, "message": "Incorrect password"}
+
+    return {"success": True}
+
+
 
 @app.post("/import-db")
 async def import_db(userId: str = Form(...), dbFile: UploadFile = File(...)):
