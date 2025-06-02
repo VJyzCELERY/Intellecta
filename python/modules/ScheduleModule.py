@@ -1,8 +1,9 @@
 import sqlite3
 import os
 from modules import config
-from datetime import datetime, timedelta
+from datetime import datetime
 from dateutil.relativedelta import relativedelta  
+from zoneinfo import ZoneInfo
 
 
 class ScheduleDBManager:
@@ -21,7 +22,7 @@ class ScheduleDBManager:
         with open(self.schedule_db, 'wb') as f:
             f.write(binary_data)
     
-    def get_upcoming_events(self, months=1):
+    def get_upcoming_events(self, months=1,user_timezone="Asia/Jakarta"):
         """
         Returns events starting within the upcoming `months` from today.
         
@@ -50,16 +51,19 @@ class ScheduleDBManager:
         
         cur.execute(query, (today_str, future_date_str))
         rows = cur.fetchall()
-        
+        user_tz = ZoneInfo(user_timezone)
         events = []
         for row in rows:
+            start_dt = datetime.fromisoformat(row['start']).replace(tzinfo=ZoneInfo("UTC")).astimezone(user_tz)
+            end_dt = datetime.fromisoformat(row['end']).replace(tzinfo=ZoneInfo("UTC")).astimezone(user_tz)
+            
             events.append({
                 'event_id': row['event_id'],
                 'title': row['title'],
                 'description': row['description'],
                 'repeat': row['repeat'],
-                'start': row['start'],
-                'end': row['end'],
+                'start': start_dt.isoformat(),
+                'end': end_dt.isoformat(),
                 'continue': row['continue'],
             })
         

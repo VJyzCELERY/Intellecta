@@ -1,12 +1,5 @@
-import torch
-import faiss
-import os
-import json
-import cv2
-import numpy as np
 from paddleocr import PaddleOCR
 from ultralytics import YOLO
-from langchain_huggingface import HuggingFaceEmbeddings
 
 OCR = PaddleOCR(use_angle_cls=True, lang="en")
 Yolo = YOLO("yolov8n.pt")

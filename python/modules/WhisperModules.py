@@ -8,10 +8,7 @@ import subprocess
 from pathlib import Path
 import shutil
 import tempfile
-import time
-import io
 import numpy as np
-import torch
 
 class WhisperNoFFmpeg:
     def __init__(self, model_name="base", verbose=True):

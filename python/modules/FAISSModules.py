@@ -3,14 +3,13 @@ import json
 import os
 import numpy as np
 import gc
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Union
 from modules import config
 from modules.EmbeddingModules import split_text
 from modules.DocumentModules import extract_text_from_docx,extract_text_from_pdf,extract_title_from_docx,extract_title_from_pdf
 from modules.ImageModules import extract_object_from_image,extract_text_from_image
-import whisper
 from pydantic import BaseModel
 class FileData(BaseModel):
     id:str

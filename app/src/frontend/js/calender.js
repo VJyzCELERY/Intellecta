@@ -263,8 +263,10 @@ async function createEventSchedule(){
 
     await window.eventAPI.createEvent(user.id,event_data);
     window.eventAPI.exportDB(user.id);
-    renderCalendar();
+    await renderCalendar();
     closeInputModal();
+    activateDate(currentActivatedDate);
+    resetEventInput();
     
 }
 
@@ -395,7 +397,6 @@ async function deleteEvent(eventId){
     window.eventAPI.exportDB(user.id);
     displayEvents(currentActivatedDate);
 }
-
 
 prevMonthBtn.addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() - 1);

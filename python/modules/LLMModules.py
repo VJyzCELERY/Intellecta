@@ -2,6 +2,7 @@ from llama_cpp import Llama
 from modules import config
 import json
 import os
+from datetime import datetime
 from modules.FAISSModules import ImageFaissManager,DocumentFaissManager,HistoryFaissManager,AudioFaissManager
 from modules.WhisperModules import WhisperNoFFmpeg
 from modules.ScheduleModule import ScheduleDBManager
@@ -114,7 +115,7 @@ class LLMManager:
         prompt_with_reasoning = user_prompt.copy()
         prompt_with_reasoning.append({
             "role": "assistant", 
-            "content": "<thinking>\nLet me think through this step by step:\n"
+            "content": "<think>\nLet me think through this step by step:\n"
         })
         
         response = self.llm.create_chat_completion(
@@ -177,6 +178,8 @@ class LLMManager:
     def format_prompt_schedule(self,user_prompt):
         model_path = os.path.basename(config.MODEL_PATH)
         model_name = os.path.splitext(model_path)[0]
+        today = datetime.now()
+        today_str = today.strftime('%Y-%m-%d')
         def format_events_markdown(events):
             if not events:
                 return "No upcoming events."
@@ -188,38 +191,22 @@ class LLMManager:
         events_md = format_events_markdown(events)
         prompt = [
             {"role": "system", "content": 
-f"""You are {model_name}, a helpful AI assistant specializing in time management.
+f"""You are {model_name}, a time management assistant helping users optimize their schedules.
 
-## Your Task
-Analyze the user schedule and help them manage their time according to their current schedule and request.
+Use markdown for formatting:
+- **Bold** key points and terms
+- Use headings and bullet points
+- Use math and tables if needed
 
-## Response Format
-Use markdown formatting with the following structure:
+Today's date: {today_str}
 
-### Text Formatting
-- **Bold** for key terms, important concepts, and definitions  
-- *Italics* for emphasis and foreign terms
-- `code formatting` for technical terms and specific values
-- > Blockquotes for important notes or definitions
-
-### Organization
-- ## Main headers for primary topics
-- ### Subheaders for detailed sections
-- **Bullet points** for lists and categories
-- **Numbered lists** for steps and processes
-- **Tables** for comparisons (use | syntax)
-
-### Mathematical Content
-- $inline math$ for simple formulas within text
-- $$block math$$ for complex equations
-- Always explain variables and symbols after formulas
-
-## User Schedule Summary
+Here is the user's current schedule:
 {events_md}
 
-Provide your response directly based on the user's request and schedule.
+Your job: Analyze this schedule and respond to the user's time management request clearly and efficiently. Focus only on what the user needs.
 """
-            },{"role": "user", "content": user_prompt}
+}
+,{"role": "user", "content": user_prompt}
         ]
         print(prompt)
             
