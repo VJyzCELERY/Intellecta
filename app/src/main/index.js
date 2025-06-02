@@ -3,6 +3,7 @@ global.user = {
   name : 'Some User'
 }
 const { app, BrowserWindow, ipcMain,dialog} = require('electron');
+
 const path = require('node:path');
 const fs = require('fs');
 const { spawn,execFile  } = require('child_process');
@@ -136,11 +137,7 @@ const createWindow = () => {
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();
-
-
-  mainWindow.webContents.on('context-menu', (e) => {
-    e.preventDefault(); // Disable right-click context menu
-  });
+  mainWindow.removeMenu();
 
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (

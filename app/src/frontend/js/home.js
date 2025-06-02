@@ -26,10 +26,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 function updateEventBanner(events) {
   const titleEl = document.getElementById('event-banner-title');
   const timeEl = document.getElementById('event-banner-time');
+  const dateEl = document.getElementById('event-banner-date');
 
   if (!events || events.length === 0) {
     titleEl.textContent = 'No upcoming session';
     timeEl.textContent = '';
+    dateEl.textContent='';
     return;
   }
 
@@ -45,11 +47,14 @@ function updateEventBanner(events) {
     // Multiple day event: time is "end_date - end_time"
     const endDateStr = endDate.toLocaleDateString();
     const endTimeStr = endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    timeEl.textContent = `${endDateStr} - ${endTimeStr}`;
+    dateEl.textContent = `${endDateStr}`
+    timeEl.textContent = `${endTimeStr}`;
   } else {
     // Single day event: time is "start_time - end_time"
+    const startDateStr = startDate.toLocaleDateString();
     const startTimeStr = startDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     const endTimeStr = endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    dateEl.textContent = `${startDateStr}`;
     timeEl.textContent = `${startTimeStr} - ${endTimeStr}`;
   }
 }

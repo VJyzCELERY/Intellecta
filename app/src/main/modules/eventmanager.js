@@ -159,7 +159,6 @@ class EventManager{
             }
         };
 
-        // Now you can safely access the right function:
         const addFn = addFnMap[repeat.type];
 
 
@@ -257,7 +256,7 @@ class EventManager{
             VALUES (?, ?, ?, ?)
         `);
 
-        const repeatJson = JSON.stringify(eventData.repeat || null);
+        const repeatJson = eventData.repeat ? JSON.stringify(eventData.repeat) : null;
         insertEvent.run(eventData.event_id, eventData.title, eventData.description, repeatJson);
 
         let instances = eventData.instances;
@@ -389,7 +388,7 @@ class EventManager{
 
         if (lastRow && lastRow.repeat) {
             const repeat = JSON.parse(lastRow.repeat);
-            if (!repeat.until && lastRow.continue === 1) {
+            if (repeat.until == null && lastRow.continue === 1) {
                 eventsNeedingGeneration.add(lastRow.event_id);
             }
         }
