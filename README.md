@@ -11,19 +11,6 @@ npm
 Anaconda
 ```
 
-## Project Structure
-```
-Intellecta/
-├── app/ # Frontend (Node.js)
-│ ├── package.json
-│ ├── public/
-│ └── src/
-└── python/ # Backend (Python, Anaconda)
-├── environment.yml
-└── *.py
-```
-
-
 ---
 
 ## Getting Started
