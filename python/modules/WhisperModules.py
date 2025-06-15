@@ -478,26 +478,3 @@ def install_required_packages():
     except ImportError:
         print("Installing numpy...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy"])
-
-
-# Example usage
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python whisper_no_ffmpeg.py path_to_audio.mp3 [model_name]")
-        sys.exit(1)
-    
-    # Install required dependencies
-    install_required_packages()
-    
-    audio_path = sys.argv[1]
-    model_name = sys.argv[2] if len(sys.argv) > 2 else "base"
-    
-    try:
-        transcriber = WhisperNoFFmpeg(model_name, verbose=True)
-        result = transcriber.transcribe(audio_path)
-        print("\nTranscription result:")
-        print(result["text"])
-    except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-        traceback.print_exc()

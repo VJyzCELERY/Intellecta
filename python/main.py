@@ -2,7 +2,7 @@ from fastapi.responses import StreamingResponse
 from fastapi import FastAPI,UploadFile,File,BackgroundTasks,Request,Form,HTTPException
 from modules import config,LLMModules
 from modules.EmbeddingModules import EMBEDDING_MODEL,split_text
-from modules.WhisperModules import WhisperNoFFmpeg
+from modules.WhisperModules import WhisperNoFFmpeg,install_required_packages
 from modules.FAISSModules import FileData,FileClass
 from pydantic import BaseModel
 from typing import List
@@ -12,7 +12,7 @@ import uvicorn
 import hashlib
 import sqlite3
 import base64
-
+install_required_packages()
 llm_manager = LLMModules.LLMManager(stt_model=WhisperNoFFmpeg(config.STT_MODEL),embedding_model=EMBEDDING_MODEL)
 
 userDB = 'users.db'

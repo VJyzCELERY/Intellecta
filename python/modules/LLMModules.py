@@ -8,7 +8,27 @@ from modules.WhisperModules import WhisperNoFFmpeg
 from modules.ScheduleModule import ScheduleDBManager
 
 class LLMManager:
+    """
+    LLMManager handles integration between LLM inference, multimodal file processing,
+    and FAISS-based retrieval for contextual augmentation and real-time interaction.
+
+    Attributes:
+        llm: The LLM model instance (e.g., LLaMA via llama-cpp).
+        embedding_model: Embedding model used by FAISS managers.
+        stt_model: Speech-to-text model (e.g., WhisperNoFFmpeg).
+        session_id (str): Session identifier used for FAISS indexing.
+        temperature (float): Sampling temperature for LLM generation.
+        top_k (int): Top-k sampling parameter for LLM.
+        top_p (float): Nucleus sampling parameter for LLM.
+        current_prompt (str): Stores the most recent prompt for reference.
+        latest_file (list): List of recently uploaded files.
+        scheduleManager: Manages user's calendar/schedule.
+        imageManager, docManager, histManager, audioManager: FAISS index managers.
+    """
     def __init__(self,embedding_model,stt_model : WhisperNoFFmpeg ,session_id="General",temperature=0.5,top_k=40,top_p=0.9):
+        """
+        Initialize the LLMManager with configuration and FAISS managers.
+        """
         self.llm = Llama(model_path=config.MODEL_PATH,n_gpu_layers=config.N_GPU_LAYERS,n_ctx=config.TOKEN_LIMIT,chat_format="chatml",verbose=True)
         self.temperature=temperature
         self.top_k=top_k
@@ -26,22 +46,37 @@ class LLMManager:
         self._load_faiss()
 
     def _load_faiss(self):
+        """
+        Load or reinitialize FAISS managers for the current session.
+        """
         self.imageManager=ImageFaissManager(embedding_model=self.embedding_model,session_id=self.session_id,index_path="image.index")
         self.docManager=DocumentFaissManager(embedding_model=self.embedding_model,session_id=self.session_id,index_path="doc.index")
         self.audioManager=AudioFaissManager(STT_MODEL=self.stt_model,embedding_model=self.embedding_model,session_id=self.session_id,index_path="audio.index")
 
     def _update_session(self,session_id):
+        """
+        Change active session and reload FAISS managers accordingly.
+        """
         self.session_id=session_id
         self._load_faiss()
 
     def _load_schedulemanager(self,userId):
+        """
+        Initialize the schedule manager using a user ID.
+        """
         self.scheduleManager = ScheduleDBManager(userId)
         print(f'Loaded schedule manager : {self.scheduleManager}')
 
     def import_database(self,binary_data):
+        """
+        Import schedule database from binary blob.
+        """
         self.scheduleManager.import_database(binary_data=binary_data)
 
     def faiss_trained(self):
+        """
+        Check if any FAISS manager has a trained index.
+        """
         return (
             self.docManager.index.is_trained or
             self.docManager.index.ntotal > 0 or
@@ -50,7 +85,14 @@ class LLMManager:
         )
 
     def search_all(self, query: str, latest_upload=None, top_k: int = 5):
-        """Searches across all FAISS managers and aggregates results."""
+        """
+        Perform a semantic search across all managers and rank by custom relevancy.
+
+        Args:
+            query (str): The query to search for.
+            latest_upload (list): Paths of recently uploaded files.
+            top_k (int): Number of top results to return.
+        """
         results = []
         results.extend(self.docManager.search(query, latest_upload,file_type="document", top_k=top_k))
         results.extend(self.imageManager.search(query, latest_upload,file_type="image", top_k=top_k))
@@ -68,6 +110,9 @@ class LLMManager:
         return results[:top_k]
     
     def delete_files(self,file_ids:list,types:list):
+        """
+        Delete indexed files by ID and type (document, image, audio).
+        """
         if not file_ids:
             return
         for id,type in zip(file_ids,types):
@@ -79,6 +124,9 @@ class LLMManager:
                 self.imageManager.delete_by_metadata_id(id)
 
     def process_file(self,file_paths : list,file_ids:list):
+        """
+        Process and index uploaded files based on extension.
+        """
         if not file_paths:
             return
         for file_path,file_id in zip(file_paths,file_ids):
@@ -111,7 +159,15 @@ class LLMManager:
     #     return final_response
 
     def stream_generator(self, user_prompt):
-    # Add reasoning instruction with special tokens
+        """
+        Generate streaming LLM response with reasoning phase.
+
+        Args:
+            user_prompt (list): List of message dicts for chat completion.
+
+        Yields:
+            str: JSON-encoded string with generated text chunks.
+        """
         prompt_with_reasoning = user_prompt.copy()
         prompt_with_reasoning.append({
             "role": "assistant", 
@@ -149,7 +205,9 @@ class LLMManager:
 
     
     def format_metadata(self,metadata):
-        """Format metadata based on the result type."""
+        """
+        Convert metadata into a readable string format for prompting.
+        """
         data = metadata["metadata"]
         if "document" == metadata["type"]:
             formatted = f"Path: {data['path']}\n"
@@ -176,6 +234,9 @@ class LLMManager:
     
 
     def format_prompt_schedule(self,user_prompt):
+        """
+        Format schedule-aware prompt using Markdown and user's events.
+        """
         model_path = os.path.basename(config.MODEL_PATH)
         model_name = os.path.splitext(model_path)[0]
         today = datetime.now()
@@ -213,6 +274,17 @@ Your job: Analyze this schedule and respond to the user's time management reques
         return prompt
 
     def format_prompt(self,user_prompt,latest_upload=None,mode="chat"):
+        """
+        Format prompt for LLM with relevant file context and structured markdown instructions.
+
+        Args:
+            user_prompt (str): The user's message.
+            latest_upload (list): Recently uploaded files.
+            mode (str): Mode of operation ("chat" or "schedule").
+
+        Returns:
+            list: Prompt formatted for LLM chat completion.
+        """
         if mode == 'schedule':
             return self.format_prompt_schedule(user_prompt)
         relevant_entries = []

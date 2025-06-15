@@ -21,8 +21,21 @@ class FileClass(BaseModel):
     path:str
 
 class BaseFaissManager:
+    """
+    Abstract base class for managing FAISS indexes with metadata support.
+    This class handles embedding storage, searching, deduplication, deletion,
+    and persistence of both the index and associated metadata.
+    """
     def __init__(self, embedding_model: SentenceTransformer,session_id = "General", index_path="faiss.index", dimension = config.FAISS_DIM):
+        """
+        Initialize FAISS manager with a session-specific folder, embedding model, and FAISS configuration.
         
+        Args:
+            embedding_model (SentenceTransformer): Model for generating text embeddings.
+            session_id (str): Unique identifier for the session.
+            index_path (str): Name of the FAISS index file.
+            dimension (int): Dimensionality of embeddings.
+        """
         self.session_folder = os.path.join('userdata',session_id,config.INDEX_BASE_FOLDER)
         os.makedirs(self.session_folder, exist_ok=True)
         self.index_path = os.path.join(self.session_folder,index_path)
@@ -57,16 +70,19 @@ class BaseFaissManager:
         return faiss.IndexIDMap(index)
 
     def _load_metadata(self):
+        """Load metadata associated with indexed vectors from disk."""
         if os.path.exists(self.metadata_path):
             with open(self.metadata_path, "r") as f:
                 return json.load(f)
         return {}
 
     def _save_metadata(self):
+        """Save metadata to disk."""
         with open(self.metadata_path, "w") as f:
             json.dump(self.metadata, f, indent=4)
 
     def data_exists(self):
+        """Check if metadata exists for this session."""
         return os.path.exists(self.metadata_path)
     
     @abstractmethod
@@ -82,6 +98,7 @@ class BaseFaissManager:
         pass
 
     def add(self, text: str, metadata: Dict[str, Union[str, List[str]]]):
+        """Add an embedding and metadata to the FAISS index."""
         duplicate_data = self.check_duplicate_metadata(metadata)
         if duplicate_data:
             print("Duplicate Data, skipping")
@@ -96,12 +113,16 @@ class BaseFaissManager:
 
     def search(self, query: str, file_paths = None,file_type="", top_k: int = 5):
         """
-        Searches FAISS for relevant content based on query and optionally a file path.
+        Search for top-k closest embeddings given a query.
         
-        :param query: The user question.
-        :param file_path: If provided, prioritizes results from this file.
-        :param top_k: Number of results to return.
-        :return: List of relevant metadata.
+        Args:
+            query (str): Search query.
+            file_paths (list[str]): Prioritize results from these file paths.
+            file_type (str): Type of the file (document, image, etc).
+            top_k (int): Number of top results to return.
+        
+        Returns:
+            List of matched metadata and distances.
         """
         vector = self.embedding_model.encode([query])[0]
         distances, indices = self.index.search(np.array([vector], dtype=np.float32), top_k)
@@ -246,17 +267,48 @@ class BaseFaissManager:
         return entries
 
 class DocumentFaissManager(BaseFaissManager):
+    """
+    Handles the processing and indexing of document files into a FAISS vector store.
+    """
     def get_embedding_text(self, metadata: Dict) -> str:
-        """For documents, we embed the 'text' field."""
+        """
+        Extract the text to embed from the document metadata.
+
+        Args:
+            metadata (Dict): The metadata dictionary.
+
+        Returns:
+            str: The text to be embedded.
+        """
         return metadata.get("text", "")
     
     def add_document(self,id:str, path: str, text: str, title: str = None):
+        """
+        Add a document (or a chunk of it) to the FAISS index.
+
+        Args:
+            id (str): Unique identifier for the document.
+            path (str): File path of the document.
+            text (str): Text content of the document chunk.
+            title (str, optional): Title of the document. Defaults to filename if not provided.
+        """
         if not title:
             title = os.path.basename(path)
         metadata = {"id":id,"path": path, "text": text, "title": title}
         self.add(text, metadata)
 
     def process_document(self,path:str,id:str):
+        """
+        Process and index a document by reading its text content and splitting into chunks.
+
+        Args:
+            path (str): Path to the document file.
+            id (str): Document identifier.
+
+        Raises:
+            FileNotFoundError: If the file does not exist.
+            ValueError: If the file extension is unsupported.
+        """
         if not os.path.exists(path):
             raise FileNotFoundError(f"File not found : {path}")
         
@@ -283,7 +335,15 @@ class DocumentFaissManager(BaseFaissManager):
             self._save_last_id()
 
     def check_duplicate_metadata(self, metadata: Dict[str, Union[str, List[str]]]) -> bool:
-        # Check for duplicate based on 'path', 'text', and 'objects'
+        """
+        Check if the given metadata already exists in the index.
+
+        Args:
+            metadata (Dict): Metadata to check.
+
+        Returns:
+            bool: True if duplicate is found, False otherwise.
+        """
         for existing_metadata in self.metadata.values():
             if (existing_metadata.get("path") == metadata.get("path") and
                 existing_metadata.get("text") == metadata.get("text") and
@@ -292,15 +352,45 @@ class DocumentFaissManager(BaseFaissManager):
         return False
 
 class ImageFaissManager(BaseFaissManager):
+    """
+    Manages the processing and indexing of images using extracted text and object recognition.
+    """
     def get_embedding_text(self, metadata: Dict) -> str:
-        """For images, we embed the 'text' field (extracted text from image)."""
+        """
+        Extract the text to embed from image metadata.
+
+        Args:
+            metadata (Dict): The metadata dictionary.
+
+        Returns:
+            str: The extracted text to embed.
+        """
         return metadata.get("text", "")
     
     def add_image(self,id:str, path: str, text: str, objects: List[str]):
+        """
+        Add an image's metadata to the FAISS index.
+
+        Args:
+            id (str): Unique identifier for the image.
+            path (str): Path to the image file.
+            text (str): OCR-extracted text.
+            objects (List[str]): List of recognized objects.
+        """
         metadata = {"id":id,"path": path, "text": text, "objects": objects}
         self.add(text, metadata)
     
     def process_image(self,image_path : str,id):
+        """
+        Process an image by extracting text and objects, then indexing the data.
+
+        Args:
+            image_path (str): Path to the image file.
+            id (str): Unique identifier for this image.
+
+        Raises:
+            FileNotFoundError: If the image file does not exist.
+        """
         if not os.path.exists(image_path):
             raise FileNotFoundError(f"File not found: {image_path}")
         
@@ -314,7 +404,15 @@ class ImageFaissManager(BaseFaissManager):
             self._save_last_id()
 
     def check_duplicate_metadata(self, metadata: Dict[str, Union[str, List[str]]]) -> bool:
-        # Check for duplicate based on 'path', 'text', and 'objects'
+        """
+        Check for duplicate image metadata in the index.
+
+        Args:
+            metadata (Dict): Metadata to check.
+
+        Returns:
+            bool: True if duplicate exists, False otherwise.
+        """
         for existing_metadata in self.metadata.values():
             if (existing_metadata.get("path") == metadata.get("path") and
                 existing_metadata.get("text") == metadata.get("text") and
@@ -324,24 +422,73 @@ class ImageFaissManager(BaseFaissManager):
 
 
 class AudioFaissManager(BaseFaissManager):
+    """
+    Handles audio processing by transcribing speech and indexing the transcription.
+    """
     def __init__(self,STT_MODEL, embedding_model: SentenceTransformer,session_id = "General", index_path="faiss.index", dimension = config.FAISS_DIM):
+        """
+        Initialize the audio FAISS manager.
+
+        Args:
+            STT_MODEL: The speech-to-text model.
+            embedding_model (SentenceTransformer): Embedding model instance.
+            session_id (str, optional): Session name or ID.
+            index_path (str, optional): Path to FAISS index file.
+            dimension (int): Embedding dimension size.
+        """
         super(AudioFaissManager,self).__init__(embedding_model,session_id,index_path,dimension)
         self.model = STT_MODEL
 
     def get_embedding_text(self, metadata: Dict) -> str:
-        """For audio, we embed the 'transcription' field."""
+        """
+        Get the transcribed text from audio metadata.
+
+        Args:
+            metadata (Dict): Metadata dictionary.
+
+        Returns:
+            str: Transcribed text.
+        """
         return metadata.get("transcription", "")
     
     def add_audio(self,id:str, path: str, text: str, lang: str = None):
+        """
+        Add audio transcription to the FAISS index.
+
+        Args:
+            id (str): Audio ID.
+            path (str): Path to the audio file.
+            text (str): Transcribed text.
+            lang (str, optional): Language of the transcription. Defaults to 'en'.
+        """
         if not lang:
             lang = 'en'
         metadata = {"id":id,"path": path, "transcription": text, "language": lang}
         self.add(text, metadata)
 
     def extract_title(self,path:str):
+        """
+        Extract the title (filename) from a path.
+
+        Args:
+            path (str): File path.
+
+        Returns:
+            str: Filename as title.
+        """
         return os.path.basename(path)
 
     def process_audio(self,audio_path:str,id:str):
+        """
+        Process and transcribe an audio file, then add it to the FAISS index.
+
+        Args:
+            audio_path (str): Path to the audio file.
+            id (str): Audio ID.
+
+        Raises:
+            FileNotFoundError: If the file is not found.
+        """
         if not os.path.exists(audio_path):
             raise FileNotFoundError(f"File not found: {audio_path}")
         try:
@@ -361,14 +508,17 @@ class AudioFaissManager(BaseFaissManager):
             
 
 class HistoryFaissManager(BaseFaissManager):
+    """
+    Manages the indexing of chat history (user-assistant messages) into FAISS.
+    """
     def add_message(self, role: str, text: str, timestamp: float = None):
         """
-        Adds a chat message to the FAISS index.
-        
-        :param message_id: Unique message identifier.
-        :param role: "user" or "assistant".
-        :param text: The chat message.
-        :param timestamp: UNIX timestamp (optional, defaults to current time).
+        Add a chat message to the FAISS index.
+
+        Args:
+            role (str): Role of sender ("user" or "assistant").
+            text (str): Message text.
+            timestamp (float, optional): UNIX timestamp. Defaults to current time.
         """
         if timestamp is None:
             timestamp = time.time()  # Use current time if not provided
@@ -380,14 +530,25 @@ class HistoryFaissManager(BaseFaissManager):
         }
         self.add(text, metadata)
     def get_embedding_text(self, metadata: Dict) -> str:
-        """For history, we embed the 'text' field."""
+        """
+        Extract the text to embed from chat metadata.
+
+        Args:
+            metadata (Dict): Message metadata.
+
+        Returns:
+            str: The chat text.
+        """
         return metadata.get("text", "")
     def get_recent_messages(self, count: int = 5):
         """
-        Retrieves the most recent chat messages based on metadata timestamps.
-        
-        :param count: Number of messages to retrieve.
-        :return: List of messages sorted by timestamp.
+        Retrieve the most recent chat messages.
+
+        Args:
+            count (int, optional): Number of recent messages to retrieve (x2 including user and assistant).
+
+        Returns:
+            List[Dict]: List of message metadata sorted by time.
         """
         messages = sorted(self.metadata.values(), key=lambda x: x["timestamp"], reverse=True)
         return messages[:count*2]

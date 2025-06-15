@@ -31,7 +31,15 @@ const SCHEDULE_DIR = config.USER_DIR;
 }
 */
 
+/**
+ * Manages user events and schedules using SQLite databases.
+ */
 class EventManager{
+    /**
+     * Returns the path to the user's schedule directory, creating it if it doesn't exist.
+     * @param {string} userId - The user's unique ID.
+     * @returns {string} - The absolute path to the user's directory.
+     */
     getUserDir(userId) {
         const dir = path.join(SCHEDULE_DIR, userId);
         if(!fs.existsSync(dir)){
@@ -39,6 +47,11 @@ class EventManager{
         }
         return dir;
     }
+    /**
+     * Returns the raw content of the user's database file if it exists.
+     * @param {string} userId - The user's unique ID.
+     * @returns {Buffer|null} - The raw buffer of the database file, or null if not found.
+     */
     getUserDatabaseFile(userId) {
         const dbPath = path.join(this.getUserDir(userId), 'schedule.db');
         if (fs.existsSync(dbPath)) {
@@ -46,6 +59,12 @@ class EventManager{
         }
         return null;
     }
+    /**
+     * Initializes and returns the user's SQLite database.
+     * Creates tables if they do not already exist.
+     * @param {string} userId - The user's unique ID.
+     * @returns {Database} - The initialized SQLite database instance.
+     */
     getUserScheduleDB(userId){
         const userDbPath = path.join(this.getUserDir(userId),'schedule.db');
         const db = new Database(userDbPath);
@@ -68,7 +87,13 @@ class EventManager{
 
         return db;
     }
-    
+    /**
+     * Generates repeating instances of an event based on its repeat rule.
+     * @param {Object} first - First instance with start and end in ISO format.
+     * @param {Object} repeat - Repeat configuration object.
+     * @param {string} [generateUntil=null] - Optional override for when to stop generating.
+     * @returns {Array<Object>} - List of generated event instances.
+     */
     generateRepeatingInstances(first, repeat, generateUntil = null) {
         const results = [first];
         if (!repeat) return results;
@@ -186,7 +211,12 @@ class EventManager{
         return results;
     }
 
-
+    /**
+     * Generates an additional year of repeated event instances if needed.
+     * @param {string} userId - The user's unique ID.
+     * @param {string} eventId - The ID of the repeating event.
+     * @returns {Object} - Result object indicating success and number of instances generated.
+     */
     generateNextYearChunk(userId, eventId) {
         const db = this.getUserScheduleDB(userId);
         
@@ -242,7 +272,13 @@ class EventManager{
 
         return { success: true, generated: newInstances.length };
     }
-
+    /**
+     * Creates a new event with associated time instances for a user.
+     * Handles both one-time and repeating events.
+     * @param {string} userId - The user's unique ID.
+     * @param {Object} eventData - Event data including event_id, title, description, repeat, and instances.
+     * @returns {Object} - Result indicating success.
+     */
     createEventForUser(userId, eventData) {
         const db = this.getUserScheduleDB(userId);
 
@@ -279,7 +315,12 @@ class EventManager{
 
         return { success: true };
     }
-
+    /**
+     * Deletes an entire event and all of its instances for a user.
+     * @param {string} userId - The user's unique ID.
+     * @param {string} eventId - ID of the event to delete.
+     * @returns {Object} - Result indicating success.
+     */
     deleteEvent(userId, eventId) {
         const db = this.getUserScheduleDB(userId);
         const deleteDetails = db.prepare(`DELETE FROM EVENT_DETAILS WHERE event_id = ?`);
@@ -291,7 +332,13 @@ class EventManager{
         tx();
         return { success: true };
     }
-
+    /**
+     * Deletes a single instance of an event or the whole event if it's the only one.
+     * @param {string} userId - The user's unique ID.
+     * @param {string} eventId - ID of the event.
+     * @param {string} startTime - ISO string of the instance start time.
+     * @returns {Object} - Result indicating success.
+     */
     deleteSingleInstanceSmart(userId, eventId, startTime) {
         const db = this.getUserScheduleDB(userId);
 
@@ -306,7 +353,13 @@ class EventManager{
             return this.deleteSingleInstance(userId, eventId, startTime);
         }
     }
-
+    /**
+     * Deletes an instance and all future instances, or the entire event if applicable.
+     * @param {string} userId - The user's unique ID.
+     * @param {string} eventId - ID of the event.
+     * @param {string} startTime - ISO string of the start time of deletion.
+     * @returns {Object} - Result indicating success.
+     */
     deleteFutureInstanceSmart(userId, eventId, startTime) {
         const db = this.getUserScheduleDB(userId);
 
@@ -327,7 +380,13 @@ class EventManager{
         }
     }
 
-
+    /**
+     * Deletes a specific instance of an event.
+     * @param {string} userId - The user's unique ID.
+     * @param {string} eventId - ID of the event.
+     * @param {string} startTime - ISO start time of the instance to delete.
+     * @returns {Object} - Result indicating success.
+     */
     deleteSingleInstance(userId, eventId, startTime) {
         const db = this.getUserScheduleDB(userId);
         const deleteStmt = db.prepare(`
@@ -337,7 +396,13 @@ class EventManager{
         deleteStmt.run(eventId, startTime);
         return { success: true };
     }
-
+    /**
+     * Deletes an event instance and all future ones from a given point in time.
+     * @param {string} userId - The user's unique ID.
+     * @param {string} eventId - ID of the event.
+     * @param {string} startTime - ISO start time indicating where to start deletion.
+     * @returns {Object} - Result indicating success.
+     */
     deleteInstanceAndFuture(userId, eventId, startTime) {
         const db = this.getUserScheduleDB(userId);
         const deleteStmt = db.prepare(`
@@ -347,7 +412,14 @@ class EventManager{
         deleteStmt.run(eventId, startTime);
         return { success: true };
     }
-
+    /**
+     * Updates whether a particular instance should continue the repeating pattern.
+     * @param {string} userId - The user's unique ID.
+     * @param {string} eventId - ID of the event.
+     * @param {string} startTime - ISO start time of the instance.
+     * @param {boolean|null} shouldContinue - true to continue, false to stop, null to reset.
+     * @returns {Object} - Result indicating success.
+     */
     updateInstanceContinue(userId, eventId, startTime, shouldContinue) {
         const db = this.getUserScheduleDB(userId);
         const update = db.prepare(`
@@ -358,6 +430,14 @@ class EventManager{
         update.run(shouldContinue === true ? 1 : (shouldContinue === false ? 0 : null), eventId, startTime);
         return { success: true };
     }
+    /**
+     * Retrieves upcoming events starting from a specific date.
+     * Auto-generates more instances if needed.
+     * @param {string} userId - The user's unique ID.
+     * @param {string} fromDateISO - ISO string of the start date to query from.
+     * @param {number} [maxInstances=10] - Max number of instances to return.
+     * @returns {Array<Object>} - List of event instances.
+     */
     getUpcomingEvents(userId, fromDateISO, maxInstances = 10) {
         const db = this.getUserScheduleDB(userId);
         if(db==null){
@@ -405,7 +485,13 @@ class EventManager{
 
         return rows;
     }
-
+    /**
+     * Retrieves events that occur in a specific year and month.
+     * @param {string} userId - The user's unique ID.
+     * @param {number} year - Target year (e.g., 2025).
+     * @param {number} month - Target month (1-12).
+     * @returns {Array<Object>} - List of event instances for the month.
+     */
     getEventsForMonth(userId, year, month) {
         const db = this.getUserScheduleDB(userId);
 

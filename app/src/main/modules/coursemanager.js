@@ -5,12 +5,26 @@ const config = require('./config');
 const { v4: uuidv4 } = require('uuid');
 const USER_DIR = config.USER_DIR;
 
+/**
+ * Manages users' courses, topics, documents, and notes including
+ * creation, deletion, metadata management, and file operations.
+ */
 class CourseManager {
+  /**
+   * Sets the active user context and initializes their course directory.
+   * @param {string} userId - ID of the current user.
+   */
   setActiveUser(userId){
     global.user.id = userId;
     this.course_dir = path.join(USER_DIR,userId,'courses');
   }
-
+  /**
+   * Creates a new course with title and description.
+   * @param {Object} courseData - Course information.
+   * @param {string} courseData.title - Course title.
+   * @param {string} courseData.description - Course description.
+   * @returns {Object} - Metadata of the created course.
+   */
   createCourse({ title, description }) {
     const id = uuidv4();
     const courseDir = path.join(this.course_dir, id);
@@ -21,6 +35,10 @@ class CourseManager {
 
     return metadata;
   }
+  /**
+   * Deletes a course by ID.
+   * @param {string} id - ID of the course to delete.
+   */
   deleteCourse(id){
     const courseDir = path.join(this.course_dir,id);
     try{
@@ -30,6 +48,10 @@ class CourseManager {
       console.log("Failed deleting directory : ",e);
     }
   }
+  /**
+   * Retrieves all available courses for the active user.
+   * @returns {Array<Object>} - List of course metadata.
+   */
   getCourses() {
     fs.mkdirSync(this.course_dir,{recursive:true});
     const dirs = fs.readdirSync(this.course_dir);
@@ -41,7 +63,12 @@ class CourseManager {
       return null;
     }).filter(Boolean);
   }
-
+  /**
+   * Creates a topic inside a course.
+   * @param {string} courseId - Course ID where the topic is added.
+   * @param {string} topicTitle - Title of the topic.
+   * @returns {Object} - Metadata of the created topic.
+   */
   createTopic(courseId, topicTitle) {
     const topicId = `topic_${Date.now()}`;
     const topicDir = path.join(this.course_dir, courseId, topicId);
@@ -59,13 +86,21 @@ class CourseManager {
 
     return metadata;
   }
-
+  /**
+   * Deletes a topic within a course.
+   * @param {string} courseId - Course ID.
+   * @param {string} topicId - Topic ID.
+   */
   deleteTopic(courseId,topicId){
     const topicDir = path.join(this.course_dir,courseId,topicId);
     fs.rmSync(topicDir,{recursive:true,force:true});
   }
   
-
+  /**
+   * Gets all topics of a course.
+   * @param {string} courseId - Course ID.
+   * @returns {Array<Object>} - List of topic metadata.
+   */
   getTopics(courseId) {
     const coursePath = path.join(this.course_dir, courseId);
     const dirs = fs.readdirSync(coursePath).filter(f => f.startsWith('topic_'));
@@ -78,7 +113,12 @@ class CourseManager {
       return null;
     }).filter(Boolean);
   }
-
+  /**
+   * Renames a topic title.
+   * @param {string} courseId - Course ID.
+   * @param {string} topicId - Topic ID.
+   * @param {string} topicTitle - New title for the topic.
+   */
   renameTopic(courseId,topicId,topicTitle){
     const coursePath = path.join(this.course_dir, courseId);
     const topicDir = path.join(coursePath,topicId);
@@ -93,7 +133,13 @@ class CourseManager {
     this.saveMetadata(topicDir,metadata);
 
   }
-
+  /**
+   * Renames a document inside a topic.
+   * @param {string} courseId - Course ID.
+   * @param {string} topicId - Topic ID.
+   * @param {string} documentId - Document ID to rename.
+   * @param {string} newTitle - New name without extension.
+   */
   renameDocument(courseId,topicId,documentId,newTitle){
     const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     let metadata = this.loadMetadata(documentPath);
@@ -106,7 +152,11 @@ class CourseManager {
     metadata.splice(index,0,doc);
     this.saveMetadata(documentPath,metadata);
   }
-
+  /**
+   * Loads metadata from a given directory.
+   * @param {string} basepath - Directory path.
+   * @returns {Object|Array} - Parsed metadata.
+   */
   loadMetadata(basepath){
     const metadataFile = path.join(basepath, 'metadata.json')
     let metadata=[]
@@ -119,7 +169,11 @@ class CourseManager {
     }
     return metadata;
   }
-
+  /**
+   * Saves metadata to a given directory.
+   * @param {string} basepath - Directory path.
+   * @param {Object|Array} metadata - Metadata object or array.
+   */
   saveMetadata(basepath,metadata){
     const metadataFile = path.join(basepath, 'metadata.json')
     try {
@@ -128,7 +182,13 @@ class CourseManager {
       console.error("Failed to write metadata:", err);
     }
   }
-
+  /**
+   * Saves markdown/notes content to the corresponding document.
+   * @param {string} courseId - Course ID.
+   * @param {string} topicId - Topic ID.
+   * @param {string} notesId - Document ID.
+   * @param {string} content - Text content to save.
+   */
   saveNotes(courseId,topicId,notesId,content){
     const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     let metadata = this.loadMetadata(documentPath);
@@ -139,7 +199,12 @@ class CourseManager {
 
     fs.writeFileSync(note.path,content,'utf-8');
   }
-
+  /**
+   * Retrieves all documents in a topic.
+   * @param {string} courseId - Course ID.
+   * @param {string} topicId - Topic ID.
+   * @returns {Array<Object>} - Array of documents with buffer.
+   */
   getDocuments(courseId,topicId){
     const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     if (!fs.existsSync(documentPath)) {
@@ -165,7 +230,13 @@ class CourseManager {
     return documents;
 
   }
-
+  /**
+   * Uploads and saves one or more documents to a topic.
+   * @param {string} courseId - Course ID.
+   * @param {string} topicId - Topic ID.
+   * @param {Array<Object>} files - Files to upload.
+   * @returns {boolean} - Whether upload was successful.
+   */
   uploadDocument(courseId,topicId,files){
     const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     if (!fs.existsSync(documentPath)) fs.mkdirSync(documentPath, { recursive: true });
@@ -202,6 +273,12 @@ class CourseManager {
     this.saveMetadata(documentPath,metadata);
     return true;
   }
+  /**
+   * Deletes a document by ID from a topic.
+   * @param {string} courseId - Course ID.
+   * @param {string} topicId - Topic ID.
+   * @param {string} fileid - Document ID to delete.
+   */
   deleteDocument(courseId,topicId,fileid){
     const documentPath = path.join(this.course_dir, courseId, topicId, 'documents');
     let metadata=this.loadMetadata(documentPath);

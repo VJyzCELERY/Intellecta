@@ -1,17 +1,43 @@
+/**
+ * Toggles visibility between the login and register forms by
+ * adding or removing the 'active' class from both form containers.
+ */
 function toggleForms() {
     document.getElementById('loginForm').classList.toggle('active');
     document.getElementById('registerForm').classList.toggle('active');
 }
 
+/**
+ * Validates if the provided email string matches a basic email pattern.
+ * 
+ * @param {string} email - The email address to validate.
+ * @returns {boolean} - Returns true if the email format is valid.
+ */
 function validateEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
 }
 
+/**
+ * Validates password strength based on three rules:
+ * - At least one digit
+ * - At least one special character
+ * - Minimum length of 6 characters
+ * 
+ * @param {string} password - The password to validate.
+ * @returns {boolean} - Returns true if the password is strong enough.
+ */
 function validatePassword(password) {
     return /(?=.*\d)(?=.*[!@#$%^&*])(?=.{6,})/.test(password);
 }
 
+/**
+ * Handles login form validation and submission.
+ * - Checks if all fields are filled
+ * - Calls `window.userAPI.login()` for backend authentication
+ * - On success: sets user data and redirects to home page
+ * - On failure: shows an error message
+ */
 async function validateLogin() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
@@ -30,6 +56,13 @@ async function validateLogin() {
     }
 }
 
+/**
+ * Handles register form validation and submission.
+ * - Validates email, username, contact, and password format
+ * - Calls `window.userAPI.register()` for backend registration
+ * - Displays validation or backend error messages
+ * - On success: switches to login form
+ */
 async function validateRegister() {
     const email = document.getElementById('registerEmail').value.trim();
     const username = document.getElementById('registerUsername').value.trim();
@@ -51,10 +84,22 @@ async function validateRegister() {
     }
 }
 
+/**
+ * Placeholder function to simulate social login.
+ * Currently only displays an alert for the selected provider.
+ * 
+ * @param {string} provider - The social login provider (e.g., 'Google', 'Facebook').
+ */
 function socialLogin(provider) {
     alert(provider + ' login clicked (example).');
 }
 
+/**
+ * Toggles the visibility of a password input field.
+ * Switches between 'password' and 'text' input types.
+ * 
+ * @param {string} id - The DOM ID of the password input field.
+ */
 function togglePassword(id) {
     const input = document.getElementById(id);
     input.type = input.type === 'password' ? 'text' : 'password';

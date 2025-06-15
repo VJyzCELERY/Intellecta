@@ -7,15 +7,30 @@ const USER_DIR = config.USER_DIR;
 const CHAT_FILE = 'chat_history.json';
 const http = require('http');
 
+/**
+ * Manages chat history, file uploads, session handling, and communication with a Python backend server.
+ */
 class ChatManager{
+    /**
+     * Initializes a ChatManager instance with a given backend server address.
+     * @param {string} server_address - The address of the backend server.
+     */
     constructor(server_address){
         this.server_address = server_address;
     }
-
+    /**
+     * Sets the active user context, initializing the user-specific and course-specific directories.
+     * @param {string} userId - The ID of the currently active user.
+     */
     setActiveUser(userId){
         this.local_storage = path.join(USER_DIR,userId);
         this.course_dir = path.join(this.local_storage,'courses');
     }
+    /**
+     * Uploads a SQLite database file buffer to the backend server for the specified user.
+     * @param {string} userId - The ID of the user.
+     * @param {Buffer} dbBuffer - The database file buffer.
+     */    
     async exportDB(userId,dbBuffer){
         const formData = new FormData();
         formData.append('userId', userId);
@@ -26,7 +41,12 @@ class ChatManager{
         });
     
     }
-
+    /**
+     * Repeatedly checks the server's health endpoint until it responds with HTTP 200 or fails after retries.
+     * @param {number} retries - Maximum number of retries (default: 180).
+     * @param {number} interval - Time between retries in ms (default: 1000).
+     * @returns {Promise<void>}
+     */
     waitForHealthCheck(retries = 180, interval = 1000) {
         return new Promise((resolve, reject) => {
             const check = () => {
@@ -48,7 +68,12 @@ class ChatManager{
             check();
         });
     }
-
+    /**
+     * Sends a prompt to the backend server and yields streaming responses using async generator.
+     * @param {string} prompt - Prompt text to send.
+     * @param {string} mode - Mode for generation ('chat' by default).
+     * @yields {string} - Partial streamed response.
+     */
     async *sendRequest(prompt=" ",mode='chat'){
         const response = await fetch(`${this.server_address}/generate`,{
             method:"POST",
@@ -64,7 +89,11 @@ class ChatManager{
             ({ value, done } = await reader.read());
         }
     }
-
+    /**
+     * Sends a delete request to remove files or resources by ID and type.
+     * @param {string[]} ids - Array of resource IDs to delete.
+     * @param {string[]} types - Corresponding types of the resources to delete.
+     */
     async deleteFile(ids,types){
         await fetch(`${this.server_address}/delete`,{
             method:"POST",
@@ -72,7 +101,12 @@ class ChatManager{
             body:JSON.stringify({ids,types}),
         });
     }
-
+    /**
+     * Uploads one or more files to the backend for processing.
+     * @param {FileList|Array} files - Files to upload.
+     * @param {boolean} immediate - Whether to process files immediately after upload.
+     * @returns {Promise<string|undefined>} - Success message from server or undefined on failure.
+     */
     async uploadFile(files,immediate){
         if(!immediate){
             immediate=false;
@@ -118,6 +152,12 @@ class ChatManager{
             console.error("Upload failed: ", error);
         }
     }
+    /**
+     * Loads a chat session from the backend server using user, course, and topic identifiers.
+     * @param {string} userId - User ID.
+     * @param {string} courseId - Course ID.
+     * @param {string} topicId - Topic ID.
+     */
     async loadSession(userId,courseId,topicId){
         const sessionId = path.join(userId,courseId,topicId);
         
@@ -131,15 +171,19 @@ class ChatManager{
             console.error("Failed loading session");
         }
     }
-
-    async loadScheduleSession(userId){
-
-    }
-
+    /**
+     * Changes the backend server address.
+     * @param {string} serverAddress - New server address.
+     */
     changeServer(serverAddress){
         this.server_address=serverAddress;
     }
-
+    /**
+     * Deletes a session file or directory based on course and topic.
+     * @param {string} userId - User ID.
+     * @param {string} courseId - Course ID.
+     * @param {string|null} topicId - Topic ID (optional).
+     */
     async deleteSession(userId,courseId,topicId=null){
         let sessionId;
         if (topicId){
@@ -158,7 +202,12 @@ class ChatManager{
             console.error("Failed deleting session");
         }
     }
-
+    /**
+     * Loads chat history from the local file system for the specified course and topic.
+     * @param {string} courseId - Course ID.
+     * @param {string} topicId - Topic ID.
+     * @returns {Promise<Array>} - Chat history array.
+     */
     async loadChatHistory(courseId,topicId){
         // Ensure the directory exists
         // console.log(`${userId},${courseId},${topicId}`);
@@ -176,7 +225,13 @@ class ChatManager{
 
         return []; // Return an empty array if no chat history exists
     }
-
+    /**
+     * Saves a message to local chat history for a given course and topic.
+     * @param {string} message - The message content.
+     * @param {string} sender - Sender's name or ID.
+     * @param {string} courseId - Course ID.
+     * @param {string} topicId - Topic ID.
+     */
     async saveMessage(message,sender,courseId,topicId){
         const chatDirectory=this.local_storage;
         const historyDir=path.join(chatDirectory,CHAT_FILE);

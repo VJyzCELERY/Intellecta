@@ -7,7 +7,21 @@ from zoneinfo import ZoneInfo
 
 
 class ScheduleDBManager:
+    """
+    Manages an SQLite schedule database for a specific session.
+
+    Features:
+    - Importing a schedule database from a binary blob
+    - Retrieving upcoming events within a configurable time range
+    """
     def __init__(self,session_id='',dbpath='schedule.db'):
+        """
+        Initialize the ScheduleDBManager.
+
+        Args:
+            session_id (str): Unique identifier for the session/user. Determines the folder for the database.
+            dbpath (str): Filename for the SQLite schedule database. Defaults to 'schedule.db'.
+        """
         self.schedule_path=os.path.join(config.SCHEDULE_BASE_FOLDER,session_id)
         os.makedirs(self.schedule_path, exist_ok=True)
         self.schedule_db = os.path.join(self.schedule_path,dbpath)

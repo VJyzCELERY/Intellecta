@@ -5,7 +5,6 @@ const {app} = require('electron');
 const isDev = !app.isPackaged;
 // const isDev = true;
 const basePath = isDev? app.getAppPath() : path.join(process.resourcesPath);
-const userid = 'testuser'
 
 const config={
     USER_DIR : path.join(basePath,'userdata'),

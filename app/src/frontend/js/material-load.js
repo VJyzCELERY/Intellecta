@@ -18,10 +18,21 @@ document.addEventListener('DOMContentLoaded',async ()=>{
 })
 
 /**
- * This delete the document by their id from the storage
- * @param {string} docId - The id of the document to be deleted 
+ * Deletes a document by its ID from both the course storage and chat context.
+ * 
+ * This function:
+ * - Retrieves the document metadata.
+ * - Converts the document ID and type to arrays (if not already).
+ * - Deletes the document from the courseAPI.
+ * - Attempts to delete the associated file(s) via chatAPI.
+ * - Resets the active document.
+ * - Reloads the list of documents for the current topic.
+ * 
+ * @async
+ * @function deleteDocument
+ * @param {string} docId - The ID of the document to be deleted.
+ * @returns {Promise<void>}
  */
-
 async function deleteDocument(docId) {
   const topicId = currentTopicId;
   const doc = await getDocs(docId)
@@ -40,18 +51,17 @@ async function deleteDocument(docId) {
 }
 
 /**
- * This function set the input topicId as the topic to be edited and show the renaming modal for topic
- * @param {string} topicId - the designated topic to edit id
+ * Shows the rename topic modal and sets the topic to edit.
+ * @param {string} topicId - The ID of the topic to rename.
  */
-
 async function showRenameTopicModal(topicId){
     document.getElementById('topicNamingModal').style.display = 'flex';
     topicToEdit=topicId;
 }
 
 /**
- * This function renames the topic based on the input on the rename topic modal
- * @return {void}
+ * Renames the topic based on the input field in the rename modal.
+ * @returns {Promise<void>}
  */
 async function renameTopic(){
   const inputContainer = document.getElementById('topicTitle');
@@ -63,11 +73,19 @@ async function renameTopic(){
   closeModals();
 }
 
+/**
+ * Shows the rename document modal and sets the document to edit.
+ * @param {string} docId - The ID of the document to rename.
+ */
 function showRenameDocumentModal(docId) {
     documentToEdit = docId;
     document.getElementById('documentNamingModal').style.display = 'flex';
 }
 
+/**
+ * Renames the currently selected document.
+ * @returns {Promise<void>}
+ */
 async function renameDocument(){
   const titleInput = document.getElementById('docTitle');
   const title = titleInput.value.trim();
@@ -77,6 +95,10 @@ async function renameDocument(){
   closeModals();
 }
 
+/**
+ * Toggles the visibility of the topic navigation sidebar.
+ * @returns {void}
+ */
 function toggleTopicNav() {
     const topicNav = document.getElementById('topicNav');
     topicNav.classList.toggle('active');
@@ -88,8 +110,8 @@ function toggleTopicNav() {
         : 'rotate(0deg)';
 }
 /**
- * This function load the content of the current Course
- * @returns {void}
+ * Creates a new unnamed topic and activates it.
+ * @returns {Promise<void>}
  */
 async function loadCourse() {
   const courses = await window.courseAPI.getCourses();
@@ -314,8 +336,8 @@ async function loadTopic(topicId) {
 }
 
 /**
- * This function creates a new unnamed topic
- * @returns {void}
+ * Creates a new unnamed topic and activates it.
+ * @returns {Promise<void>}
  */
 async function createNewTopic(){
   const title = "Unnamed";
@@ -326,9 +348,9 @@ async function createNewTopic(){
 }
 
 /**
- * This function deletes the selected topic
- * @param {string} topicId - The id of topic to delete
- * @returns {void}
+ * Deletes the selected topic and its related chat session.
+ * @param {string} topicId - The ID of the topic to delete.
+ * @returns {Promise<void>}
  */
 async function deleteTopic(topicId){
   console.log('Deleting ',topicId);
@@ -380,9 +402,9 @@ async function storeFiles(selectedFiles) {
   closeModals();
 }
 /**
- * This function handles drag and dropping file
- * @param {*} e - event containing the file
- * @returns {void}
+ * Handles drag-and-drop file uploads into the drop zone.
+ * @param {DragEvent} e - The drag event containing the files.
+ * @returns {Promise<void>}
  */
 async function handleDrop(e) {
   e.preventDefault();
@@ -400,10 +422,10 @@ async function handleDrop(e) {
 }
 
 /**
- * This function takes care of multiple file input
- * @param {*} e - this takes input from multiple file input
+ * Handles file input selection from file picker.
+ * @param {Event} e - The change event from the file input.
+ * @returns {Promise<void>}
  */
-
 async function handleFileSelect(e) {
   const files = e.target.files;
   for (const file of files){
@@ -412,7 +434,10 @@ async function handleFileSelect(e) {
     storeFiles([{id:id,name:file.name,arrayBuffer:arrayBuffer}]);
   }
 }
-
+/**
+ * Creates a new note in the current topic.
+ * @returns {Promise<void>}
+ */
 async function createNewNote(){
   const topicId = currentTopicId;
   const titleInput = document.getElementById('noteTitle');
@@ -427,10 +452,10 @@ async function createNewNote(){
   closeModals();
 }
 
+
 /**
- *  This function save the current active note
- * 
- * 
+ * Saves the current active note content to both course and chat context.
+ * @returns {Promise<void>}
  */
 async function saveNotes(){
   const input_field = document.getElementById('content-editor');
